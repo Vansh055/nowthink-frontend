@@ -2,9 +2,10 @@ import { useState } from "react";
 
 function App() {
   const [message, setMessage] = useState("");
-  const [response, setResponse] = useState("");
   const [loading, setLoading] = useState(false);
+  const [patternLoading, setPatternLoading] = useState(false);
   const [history, setHistory] = useState([]);
+  const [pattern, setPattern] = useState("");
 
   const handleCheckIn = async () => {
     if (!message.trim()) return;
@@ -17,12 +18,24 @@ function App() {
       });
       const data = await res.text();
       setHistory([...history, { you: message, nowthink: data }]);
-      setResponse(data);
       setMessage("");
     } catch (err) {
-      setResponse("Something went wrong. Is the backend running?");
+      setHistory([...history, { you: message, nowthink: "Something went wrong. Is the backend running?" }]);
     }
     setLoading(false);
+  };
+
+  const handlePatterns = async () => {
+    setPatternLoading(true);
+    setPattern("");
+    try {
+      const res = await fetch("http://localhost:9090/api/checkin/patterns");
+      const data = await res.text();
+      setPattern(data);
+    } catch (err) {
+      setPattern("Something went wrong.");
+    }
+    setPatternLoading(false);
   };
 
   return (
@@ -42,6 +55,12 @@ function App() {
             <p style={styles.nowthink}>{entry.nowthink}</p>
           </div>
         ))}
+        {pattern && (
+          <div style={styles.patternBox}>
+            <p style={styles.patternLabel}>pattern detected</p>
+            <p style={styles.patternText}>{pattern}</p>
+          </div>
+        )}
       </div>
 
       <div style={styles.inputRow}>
@@ -56,6 +75,10 @@ function App() {
           {loading ? "..." : "→"}
         </button>
       </div>
+
+      <button style={styles.patternButton} onClick={handlePatterns} disabled={patternLoading}>
+        {patternLoading ? "looking for patterns..." : "what patterns do you see in me?"}
+      </button>
     </div>
   );
 }
@@ -91,6 +114,25 @@ const styles = {
     paddingLeft: "16px",
     borderLeft: "2px solid #2a4a2a",
   },
+  patternBox: {
+    backgroundColor: "#111",
+    border: "1px solid #2a4a2a",
+    borderRadius: "12px",
+    padding: "20px",
+    marginTop: "32px",
+  },
+  patternLabel: {
+    color: "#4a7a4a",
+    fontSize: "0.75rem",
+    letterSpacing: "0.15em",
+    textTransform: "uppercase",
+    marginBottom: "12px",
+  },
+  patternText: {
+    color: "#c8e6c8",
+    lineHeight: "1.8",
+    fontStyle: "italic",
+  },
   inputRow: {
     display: "flex",
     width: "100%",
@@ -119,6 +161,18 @@ const styles = {
     fontSize: "1.4rem",
     cursor: "pointer",
     height: "60px",
+  },
+  patternButton: {
+    marginTop: "16px",
+    backgroundColor: "transparent",
+    border: "1px solid #2a4a2a",
+    borderRadius: "8px",
+    color: "#4a7a4a",
+    padding: "10px 24px",
+    fontSize: "0.85rem",
+    cursor: "pointer",
+    fontFamily: "'Georgia', serif",
+    letterSpacing: "0.05em",
   },
 };
 
