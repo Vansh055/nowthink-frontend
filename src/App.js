@@ -296,7 +296,7 @@ export default function App() {
             <span style={{ color: "#2a5c3a", fontSize: "0.7rem", letterSpacing: "0.3em", textTransform: "uppercase", fontFamily: "system-ui", fontWeight: 600 }}>nowthink</span>
             <div style={{ display: "flex", gap: "4px" }}>
               {navItems.map(item => (
-                <button key={item.key} onClick={() => setView(item.key)} style={{ background: "none", border: "none", cursor: "pointer", padding: "6px 12px", borderRadius: "6px", fontSize: "0.8rem", fontFamily: "system-ui", color: view === item.key ? "#e0e0e0" : "#444", background: view === item.key ? "#111" : "transparent", transition: "all 0.15s", display: "flex", alignItems: "center", gap: "6px" }}>
+                <button key={item.key} onClick={() => setView(item.key)} style={{ border: "none", cursor: "pointer", padding: "6px 12px", borderRadius: "6px", fontSize: "0.8rem", fontFamily: "system-ui", color: view === item.key ? "#e0e0e0" : "#444", background: view === item.key ? "#111" : "transparent", transition: "all 0.15s", display: "flex", alignItems: "center", gap: "6px" }}>
                   {item.label}
                   {item.count > 0 && <span style={{ background: "#1a1a1a", color: "#444", fontSize: "0.6rem", padding: "1px 5px", borderRadius: "10px", fontFamily: "system-ui" }}>{item.count}</span>}
                 </button>
