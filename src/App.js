@@ -5,82 +5,106 @@ const getToken = () => localStorage.getItem("nowthink_token");
 const saveToken = t => localStorage.setItem("nowthink_token", t);
 const clearToken = () => localStorage.removeItem("nowthink_token");
 const authFetch = (url, opts = {}) => fetch(url, {
-  ...opts,
-  headers: { ...opts.headers, Authorization: `Bearer ${getToken() || ""}` }
+  ...opts, headers: { ...opts.headers, Authorization: `Bearer ${getToken() || ""}` }
 });
 
 const greet = () => {
   const h = new Date().getHours();
-  if (h < 5)  return ["It is very late.", "What's keeping you awake?"];
+  if (h < 5)  return ["It is very late.", "The mind is most honest when the world is asleep."];
   if (h < 12) return ["Good morning.", "What have you noticed since you woke up?"];
-  if (h < 17) return ["Good afternoon.", "Something worth recording?"];
-  if (h < 21) return ["Good evening.", "What patterns emerged today?"];
+  if (h < 17) return ["Good afternoon.", "Something worth capturing before it fades?"];
+  if (h < 21) return ["Good evening.", "What patterns showed up in today?"];
   return ["Late evening.", "What did today reveal that you almost missed?"];
 };
 
 const confColor = s => s >= 80 ? "#4a9e6a" : s >= 60 ? "#7a8a3a" : s >= 40 ? "#9a7a3a" : "#8a4a4a";
-const themeHue = t => ({ confidence:"#4a9e6a",focus:"#3a7a9e",relationships:"#9e3a7a",identity:"#6a3a9e",productivity:"#9e8a3a",fear:"#9e4a4a",growth:"#3a9e7a",purpose:"#5a3a9e" })[t] || "#555";
+const confLabel = s => s >= 80 ? "High confidence" : s >= 60 ? "Moderate" : s >= 40 ? "Uncertain" : "Low confidence";
+const themeHue = t => ({
+  confidence:"#4a9e6a", focus:"#3a7a9e", relationships:"#9e3a7a",
+  identity:"#6a3a9e", productivity:"#9e8a3a", fear:"#9e4a4a",
+  growth:"#3a9e7a", purpose:"#5a3a9e"
+})[t] || "#666";
 
 const C = {
-  bg:"#070707", surface:"#0b0b0b", border:"#141414", borderHov:"#222",
-  text:"#e8e8e8", textMid:"#777", textDim:"#333", textGhost:"#1e1e1e",
-  accent:"#4a9e6a", accentDim:"#2a5c3a",
+  bg:"#060606", surface:"#0a0a0a", surfaceHov:"#0e0e0e",
+  border:"#141414", borderHov:"#242424", borderAccent:"#1a2e1a",
+  text:"#e8e8e8", textMid:"#666", textDim:"#2e2e2e", textGhost:"#1a1a1a",
+  accent:"#4a9e6a", accentDim:"#2a5c3a", accentGlow:"rgba(74,158,106,0.08)",
 };
 
-const T = {
-  label:  { fontSize:"0.6rem",  letterSpacing:"0.18em", textTransform:"uppercase", fontFamily:"system-ui,-apple-system,sans-serif", fontWeight:600 },
-  caption:{ fontSize:"0.75rem", fontFamily:"system-ui,-apple-system,sans-serif", lineHeight:1.5 },
-  body:   { fontSize:"0.9rem",  fontFamily:"'Georgia',serif", lineHeight:1.75 },
-  prose:  { fontSize:"1rem",    fontFamily:"'Georgia',serif", lineHeight:1.8 },
-  h1:     { fontWeight:"normal", fontFamily:"'Georgia',serif", letterSpacing:"-0.025em", lineHeight:1.2 },
-};
-
-const Spinner = ({ size=18 }) => (
-  <svg width={size} height={size} viewBox="0 0 18 18" style={{ animation:"nt-spin 0.9s linear infinite", flexShrink:0 }}>
+const Spinner = ({ size=18, color="#4a9e6a" }) => (
+  <svg width={size} height={size} viewBox="0 0 18 18" style={{ animation:"nt-spin 0.8s linear infinite", flexShrink:0 }}>
     <circle cx="9" cy="9" r="7" fill="none" stroke="#1a1a1a" strokeWidth="1.5"/>
-    <path d="M9 2 A7 7 0 0 1 16 9" fill="none" stroke={C.accent} strokeWidth="1.5" strokeLinecap="round"/>
+    <path d="M9 2 A7 7 0 0 1 16 9" fill="none" stroke={color} strokeWidth="1.5" strokeLinecap="round"/>
   </svg>
+);
+
+const SkeletonLine = ({ w="100%", h=14, mb=8 }) => (
+  <div style={{ width:w, height:h, background:"#111", borderRadius:4, marginBottom:mb, animation:"nt-shimmer 1.5s ease-in-out infinite" }}/>
+);
+
+const SkeletonCard = () => (
+  <div style={{ background:C.surface, border:`1px solid ${C.border}`, borderRadius:10, padding:"20px 24px", marginBottom:8 }}>
+    <div style={{ display:"flex", justifyContent:"space-between", marginBottom:14 }}>
+      <SkeletonLine w="80px" h={10}/>
+      <SkeletonLine w="70px" h={20}/>
+    </div>
+    <SkeletonLine w="100%" h={14} mb={6}/>
+    <SkeletonLine w="75%" h={14} mb={18}/>
+    <SkeletonLine w="100%" h={4}/>
+  </div>
 );
 
 const Badge = ({ status }) => {
   const cfg = {
-    Supported:    { bg:"#0a1f0e", border:"#1a4a25", color:"#4a9e6a" },
-    Investigating:{ bg:"#1a1a08", border:"#3a3a12", color:"#9e9e4a" },
-    Refuted:      { bg:"#1f0a0a", border:"#4a1a1a", color:"#9e4a4a" },
-    pending:      { bg:"#111",    border:"#1a1a1a", color:"#333"    },
-    error:        { bg:"#111",    border:"#1a1a1a", color:"#333"    },
+    Supported:    { bg:"#0a1f0e", border:"#1a4a25", color:"#4a9e6a", dot:"#4a9e6a" },
+    Investigating:{ bg:"#1a1a08", border:"#3a3a12", color:"#9e9e4a", dot:"#9e9e4a" },
+    Refuted:      { bg:"#1f0a0a", border:"#4a1a1a", color:"#9e4a4a", dot:"#9e4a4a" },
+    pending:      { bg:"#111",    border:"#1a1a1a", color:"#333",    dot:"#333"    },
+    error:        { bg:"#111",    border:"#1a1a1a", color:"#333",    dot:"#333"    },
   };
   const s = cfg[status] || cfg.pending;
-  return <span style={{ ...T.label, background:s.bg, border:`1px solid ${s.border}`, color:s.color, padding:"3px 9px", borderRadius:"4px", fontSize:"0.58rem" }}>{status}</span>;
+  return (
+    <span style={{ display:"inline-flex", alignItems:"center", gap:5, background:s.bg, border:`1px solid ${s.border}`, color:s.color, padding:"3px 9px", borderRadius:4, fontSize:"0.58rem", letterSpacing:"0.14em", textTransform:"uppercase", fontFamily:"system-ui", fontWeight:600 }}>
+      <span style={{ width:5, height:5, borderRadius:"50%", background:s.dot, flexShrink:0 }}/>
+      {status}
+    </span>
+  );
 };
 
-const ConfBar = ({ score, height=3 }) => (
-  <div style={{ display:"flex", alignItems:"center", gap:"12px" }}>
-    <div style={{ flex:1, height, background:"#111", borderRadius:height, overflow:"hidden" }}>
-      <div style={{ width:`${score}%`, height:"100%", background:confColor(score), borderRadius:height, transition:"width 1s cubic-bezier(0.4,0,0.2,1)" }}/>
+const ConfBar = ({ score, height=4, showLabel=false }) => (
+  <div>
+    {showLabel && (
+      <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:8 }}>
+        <span style={{ fontSize:"0.6rem", letterSpacing:"0.16em", textTransform:"uppercase", fontFamily:"system-ui", fontWeight:600, color:"#2a2a2a" }}>Confidence</span>
+        <span style={{ fontSize:"0.75rem", fontFamily:"system-ui", color:confColor(score), fontWeight:600 }}>{score}% · {confLabel(score)}</span>
+      </div>
+    )}
+    <div style={{ display:"flex", alignItems:"center", gap:12 }}>
+      <div style={{ flex:1, height, background:"#0f0f0f", borderRadius:height, overflow:"hidden", position:"relative" }}>
+        <div style={{ width:`${score}%`, height:"100%", background:`linear-gradient(90deg, ${confColor(score)}aa, ${confColor(score)})`, borderRadius:height, transition:"width 1.2s cubic-bezier(0.4,0,0.2,1)", boxShadow:`0 0 8px ${confColor(score)}44` }}/>
+      </div>
+      {!showLabel && <span style={{ fontSize:"0.72rem", fontFamily:"system-ui", color:confColor(score), minWidth:32, textAlign:"right", fontWeight:600 }}>{score}%</span>}
     </div>
-    <span style={{ ...T.caption, color:C.textMid, minWidth:"32px", textAlign:"right", fontVariantNumeric:"tabular-nums" }}>{score}%</span>
   </div>
 );
 
-// ── LOGIN ─────────────────────────────────────────────────────────────────
+// ── LOGIN ──────────────────────────────────────────────────────────────────
 function LoginScreen() {
   return (
     <div style={{ minHeight:"100vh", background:C.bg, display:"flex", alignItems:"center", justifyContent:"center", padding:"40px 24px" }}>
       <div style={{ maxWidth:"360px", width:"100%" }}>
-        <p style={{ ...T.label, color:C.accentDim, marginBottom:"28px", fontSize:"0.62rem" }}>nowthink</p>
-        <h1 style={{ ...T.h1, color:C.text, fontSize:"clamp(2.1rem,5vw,2.8rem)", margin:"0 0 20px" }}>
+        <p style={{ fontSize:"0.62rem", letterSpacing:"0.28em", textTransform:"uppercase", fontFamily:"system-ui", fontWeight:700, color:C.accentDim, marginBottom:24 }}>nowthink</p>
+        <h1 style={{ fontSize:"clamp(2.2rem,5vw,2.9rem)", fontWeight:"normal", fontFamily:"'Georgia',serif", letterSpacing:"-0.03em", lineHeight:1.15, color:C.text, margin:"0 0 20px" }}>
           See the patterns<br/>you never knew<br/>were there.
         </h1>
-        <p style={{ ...T.caption, color:"#2e2e2e", lineHeight:1.85, margin:"0 0 44px" }}>
-          An AI that investigates you.<br/>
-          Not a journal. Not a chatbot.<br/>
-          A case built from your own words.
+        <p style={{ fontSize:"0.8rem", fontFamily:"system-ui", color:"#282828", lineHeight:1.9, margin:"0 0 44px" }}>
+          An AI that investigates you.<br/>Not a journal. Not a chatbot.<br/>A case built from your own words.
         </p>
         <a href={`${API}/oauth2/authorization/google`}
-          style={{ display:"inline-flex", alignItems:"center", gap:"10px", background:"#f5f5f5", color:"#111", padding:"12px 22px", borderRadius:"6px", fontSize:"0.85rem", textDecoration:"none", fontFamily:"system-ui", fontWeight:500, letterSpacing:"-0.01em", transition:"background 0.15s", whiteSpace:"nowrap" }}
-          onMouseEnter={e => e.currentTarget.style.background="#fff"}
-          onMouseLeave={e => e.currentTarget.style.background="#f5f5f5"}>
+          style={{ display:"inline-flex", alignItems:"center", gap:10, background:"#f4f4f4", color:"#111", padding:"12px 20px", borderRadius:7, fontSize:"0.84rem", textDecoration:"none", fontFamily:"system-ui", fontWeight:500, letterSpacing:"-0.01em", transition:"all 0.18s", whiteSpace:"nowrap" }}
+          onMouseEnter={e => { e.currentTarget.style.background="#fff"; e.currentTarget.style.transform="translateY(-1px)"; e.currentTarget.style.boxShadow="0 4px 20px rgba(0,0,0,0.4)"; }}
+          onMouseLeave={e => { e.currentTarget.style.background="#f4f4f4"; e.currentTarget.style.transform="none"; e.currentTarget.style.boxShadow="none"; }}>
           <svg width="16" height="16" viewBox="0 0 18 18" style={{ flexShrink:0 }}>
             <path fill="#4285F4" d="M17.64 9.2c0-.637-.057-1.251-.164-1.84H9v3.481h4.844c-.209 1.125-.843 2.078-1.796 2.717v2.258h2.908c1.702-1.567 2.684-3.875 2.684-6.615z"/>
             <path fill="#34A853" d="M9 18c2.43 0 4.467-.806 5.956-2.18l-2.908-2.259c-.806.54-1.837.86-3.048.86-2.344 0-4.328-1.584-5.036-3.711H.957v2.332A8.997 8.997 0 0 0 9 18z"/>
@@ -89,128 +113,215 @@ function LoginScreen() {
           </svg>
           Continue with Google
         </a>
-        <p style={{ ...T.caption, color:"#181818", marginTop:"20px", fontSize:"0.68rem" }}>Your observations are private. Always.</p>
+        <p style={{ fontSize:"0.68rem", fontFamily:"system-ui", color:"#181818", marginTop:18 }}>Your observations are private. Always.</p>
       </div>
     </div>
   );
 }
 
-// ── CASE CARD ─────────────────────────────────────────────────────────────
-function CaseCard({ d, onClick }) {
+// ── CASE CARD ──────────────────────────────────────────────────────────────
+function CaseCard({ d, onClick, index=0 }) {
   const [hov, setHov] = useState(false);
   return (
     <article onClick={() => onClick(d)}
       onMouseEnter={() => setHov(true)}
       onMouseLeave={() => setHov(false)}
-      style={{ background:hov ? "#0d0d0d" : C.surface, border:`1px solid ${hov ? C.borderHov : C.border}`, borderRadius:"8px", padding:"20px 24px", marginBottom:"8px", cursor:"pointer", transition:"background 0.15s, border-color 0.15s", animation:"nt-up 0.3s ease both" }}>
-      <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:"14px", gap:"16px" }}>
-        <div style={{ display:"flex", alignItems:"center", gap:"10px" }}>
-          <span style={{ ...T.label, color:"#1e2e1e", fontSize:"0.56rem" }}>CASE #{d.id}</span>
+      style={{
+        background: hov ? C.surfaceHov : C.surface,
+        border: `1px solid ${hov ? C.borderHov : C.border}`,
+        borderRadius:10,
+        padding:"20px 24px",
+        marginBottom:8,
+        cursor:"pointer",
+        transition:"all 0.2s cubic-bezier(0.4,0,0.2,1)",
+        transform: hov ? "translateY(-2px)" : "translateY(0)",
+        boxShadow: hov ? `0 8px 32px rgba(0,0,0,0.4), 0 0 0 1px ${C.borderHov}, inset 0 1px 0 rgba(255,255,255,0.03)` : "none",
+        animation:`nt-up 0.3s ease ${index*0.05}s both`,
+        position:"relative",
+        overflow:"hidden",
+      }}>
+      {hov && <div style={{ position:"absolute", inset:0, background:`radial-gradient(ellipse at top left, ${C.accentGlow}, transparent 70%)`, pointerEvents:"none" }}/>}
+      <div style={{ display:"flex", justifyContent:"space-between", alignItems:"flex-start", marginBottom:12, gap:16, position:"relative" }}>
+        <div style={{ display:"flex", alignItems:"center", gap:8 }}>
+          <span style={{ fontSize:"0.56rem", letterSpacing:"0.18em", textTransform:"uppercase", fontFamily:"system-ui", fontWeight:600, color:"#1e2e1e" }}>Case #{d.id}</span>
           {d.discoveryType && d.discoveryType !== "none" &&
-            <span style={{ ...T.label, color:"#1e1e1e", fontSize:"0.54rem" }}>{d.discoveryType}</span>}
+            <span style={{ fontSize:"0.54rem", letterSpacing:"0.12em", textTransform:"uppercase", fontFamily:"system-ui", color:"#1a1a1a" }}>{d.discoveryType}</span>}
         </div>
         <Badge status={d.status}/>
       </div>
-      <p style={{ ...T.body, color:"#b8b8b8", marginBottom:"18px", fontSize:"0.875rem" }}>{d.claim}</p>
+      <p style={{ fontSize:"0.9rem", fontFamily:"'Georgia',serif", lineHeight:1.7, color:"#b0b0b0", marginBottom:16, position:"relative" }}>{d.claim}</p>
       <ConfBar score={d.confidenceScore}/>
+      <div style={{ display:"flex", justifyContent:"flex-end", marginTop:12 }}>
+        <span style={{ fontSize:"0.68rem", fontFamily:"system-ui", color: hov ? C.accent : "#252525", transition:"color 0.2s", letterSpacing:"-0.01em" }}>
+          {hov ? "Open file →" : "Click to open"}
+        </span>
+      </div>
     </article>
   );
 }
 
-// ── CASE MODAL ────────────────────────────────────────────────────────────
+// ── CASE MODAL ─────────────────────────────────────────────────────────────
 function CaseModal({ d, onClose }) {
+  const [tab, setTab] = useState("report");
+
   useEffect(() => {
+    setTab("report");
     const h = e => e.key === "Escape" && onClose();
     document.addEventListener("keydown", h);
     return () => document.removeEventListener("keydown", h);
-  }, [onClose]);
+  }, [d, onClose]);
 
   if (!d) return null;
+
+  const tabs = [
+    { key:"report",   label:"Report" },
+    { key:"evidence", label:"Evidence" },
+  ];
+
   return (
-    <div onClick={onClose} style={{ position:"fixed", inset:0, background:"rgba(0,0,0,0.94)", display:"flex", alignItems:"center", justifyContent:"center", zIndex:300, padding:"24px", backdropFilter:"blur(12px)" }}>
+    <div onClick={onClose}
+      style={{ position:"fixed", inset:0, background:"rgba(0,0,0,0.95)", display:"flex", alignItems:"center", justifyContent:"center", zIndex:300, padding:"24px", backdropFilter:"blur(16px)", animation:"nt-fade 0.2s ease" }}>
       <div onClick={e => e.stopPropagation()}
-        style={{ background:"#0c0c0c", border:"1px solid #1e1e1e", borderRadius:"10px", maxWidth:"580px", width:"100%", maxHeight:"88vh", overflowY:"auto", animation:"nt-up 0.2s ease" }}>
-        <div style={{ padding:"22px 28px", borderBottom:"1px solid #0f0f0f", display:"flex", justifyContent:"space-between", alignItems:"center" }}>
-          <div style={{ display:"flex", alignItems:"center", gap:"12px" }}>
-            <span style={{ ...T.label, color:"#1e2e1e", fontSize:"0.56rem" }}>CASE #{d.id}</span>
-            <span style={{ color:"#161616" }}>·</span>
-            <Badge status={d.status}/>
-          </div>
-          <button onClick={onClose}
-            style={{ ...T.label, background:"#111", border:"1px solid #1a1a1a", color:"#333", padding:"4px 10px", borderRadius:"4px", cursor:"pointer", fontSize:"0.54rem", transition:"color 0.15s" }}
-            onMouseEnter={e => e.currentTarget.style.color="#666"}
-            onMouseLeave={e => e.currentTarget.style.color="#333"}>
-            ESC
-          </button>
-        </div>
-        <div style={{ padding:"28px 28px 24px" }}>
-          <p style={{ ...T.prose, color:"#e0e0e0", marginBottom:"32px", fontStyle:"italic" }}>{d.claim}</p>
-          <div style={{ marginBottom:"32px" }}>
-            <p style={{ ...T.label, color:C.textDim, marginBottom:"12px", fontSize:"0.56rem" }}>Confidence level</p>
-            <ConfBar score={d.confidenceScore} height={5}/>
-          </div>
-          {d.evidenceFor && (
-            <div style={{ marginBottom:"16px" }}>
-              <p style={{ ...T.label, color:C.accentDim, marginBottom:"10px", fontSize:"0.56rem" }}>Evidence for</p>
-              <div style={{ background:"#0a1209", border:"1px solid #0e1a0e", borderRadius:"6px", padding:"16px 18px" }}>
-                <p style={{ ...T.body, color:"#6a9a6a", margin:0, fontStyle:"italic", fontSize:"0.875rem" }}>{d.evidenceFor}</p>
-              </div>
+        style={{ background:"#0a0a0a", border:"1px solid #1e1e1e", borderRadius:12, maxWidth:620, width:"100%", maxHeight:"90vh", overflowY:"auto", animation:"nt-modal 0.25s cubic-bezier(0.34,1.56,0.64,1)", boxShadow:"0 40px 80px rgba(0,0,0,0.8), inset 0 1px 0 rgba(255,255,255,0.04)" }}>
+
+        {/* File header */}
+        <div style={{ padding:"20px 28px 0", borderBottom:"1px solid #0f0f0f" }}>
+          <div style={{ display:"flex", justifyContent:"space-between", alignItems:"flex-start", marginBottom:16 }}>
+            <div>
+              <p style={{ fontSize:"0.56rem", letterSpacing:"0.2em", textTransform:"uppercase", fontFamily:"system-ui", fontWeight:600, color:"#1e2e1e", marginBottom:8 }}>
+                Nowthink · Investigation File · Case #{d.id}
+              </p>
+              <Badge status={d.status}/>
             </div>
-          )}
-          {d.evidenceAgainst && (
-            <div style={{ marginBottom:"16px" }}>
-              <p style={{ ...T.label, color:"#5c2525", marginBottom:"10px", fontSize:"0.56rem" }}>Evidence against</p>
-              <div style={{ background:"#120a0a", border:"1px solid #1c0e0e", borderRadius:"6px", padding:"16px 18px" }}>
-                <p style={{ ...T.body, color:"#9a6a6a", margin:0, fontStyle:"italic", fontSize:"0.875rem" }}>{d.evidenceAgainst}</p>
-              </div>
-            </div>
-          )}
-          <div style={{ marginTop:"24px", paddingTop:"20px", borderTop:"1px solid #0f0f0f" }}>
-            <span style={{ ...T.caption, color:C.textGhost, fontSize:"0.68rem" }}>Discovery type: {d.discoveryType}</span>
+            <button onClick={onClose}
+              style={{ fontSize:"0.56rem", letterSpacing:"0.1em", textTransform:"uppercase", fontFamily:"system-ui", fontWeight:600, background:"#111", border:"1px solid #1a1a1a", color:"#2e2e2e", padding:"5px 10px", borderRadius:4, cursor:"pointer", transition:"color 0.15s" }}
+              onMouseEnter={e => e.currentTarget.style.color="#666"}
+              onMouseLeave={e => e.currentTarget.style.color="#2e2e2e"}>
+              Close
+            </button>
+          </div>
+
+          {/* Tabs */}
+          <div style={{ display:"flex", gap:0 }}>
+            {tabs.map(t => (
+              <button key={t.key} onClick={() => setTab(t.key)}
+                style={{ background:"none", border:"none", padding:"10px 16px", fontSize:"0.78rem", fontFamily:"system-ui", color: tab===t.key ? C.text : "#333", borderBottom:`2px solid ${tab===t.key ? C.accent : "transparent"}`, cursor:"pointer", transition:"all 0.15s", letterSpacing:"-0.01em", position:"relative", top:1 }}>
+                {t.label}
+              </button>
+            ))}
           </div>
         </div>
+
+        {/* Report tab */}
+        {tab === "report" && (
+          <div style={{ padding:"28px 28px 24px", animation:"nt-up 0.2s ease" }}>
+            {/* Hypothesis */}
+            <div style={{ marginBottom:28 }}>
+              <p style={{ fontSize:"0.56rem", letterSpacing:"0.16em", textTransform:"uppercase", fontFamily:"system-ui", fontWeight:600, color:"#252525", marginBottom:12 }}>Hypothesis</p>
+              <p style={{ fontSize:"1.05rem", fontFamily:"'Georgia',serif", lineHeight:1.8, color:"#e0e0e0", fontStyle:"italic" }}>{d.claim}</p>
+            </div>
+
+            <div style={{ height:1, background:"#0f0f0f", margin:"0 0 28px" }}/>
+
+            {/* Confidence */}
+            <div style={{ marginBottom:28 }}>
+              <ConfBar score={d.confidenceScore} height={6} showLabel/>
+              <p style={{ fontSize:"0.72rem", fontFamily:"system-ui", color:"#222", marginTop:10, lineHeight:1.7 }}>
+                Based on the volume and consistency of supporting observations versus contradicting ones.
+              </p>
+            </div>
+
+            <div style={{ height:1, background:"#0f0f0f", margin:"0 0 28px" }}/>
+
+            {/* Meta */}
+            <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:16 }}>
+              <div style={{ background:"#080808", border:"1px solid #111", borderRadius:6, padding:"14px 16px" }}>
+                <p style={{ fontSize:"0.56rem", letterSpacing:"0.14em", textTransform:"uppercase", fontFamily:"system-ui", fontWeight:600, color:"#222", marginBottom:6 }}>Discovery type</p>
+                <p style={{ fontSize:"0.82rem", fontFamily:"system-ui", color:"#444" }}>{d.discoveryType || "Pattern"}</p>
+              </div>
+              <div style={{ background:"#080808", border:"1px solid #111", borderRadius:6, padding:"14px 16px" }}>
+                <p style={{ fontSize:"0.56rem", letterSpacing:"0.14em", textTransform:"uppercase", fontFamily:"system-ui", fontWeight:600, color:"#222", marginBottom:6 }}>Status</p>
+                <p style={{ fontSize:"0.82rem", fontFamily:"system-ui", color: d.status==="Supported" ? C.accent : d.status==="Investigating" ? "#9e9e4a" : "#9e4a4a" }}>{d.status}</p>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Evidence tab */}
+        {tab === "evidence" && (
+          <div style={{ padding:"28px 28px 24px", animation:"nt-up 0.2s ease" }}>
+            {d.evidenceFor && (
+              <div style={{ marginBottom:20 }}>
+                <p style={{ fontSize:"0.56rem", letterSpacing:"0.16em", textTransform:"uppercase", fontFamily:"system-ui", fontWeight:600, color:C.accentDim, marginBottom:12 }}>Supporting evidence</p>
+                <div style={{ background:"#091209", border:"1px solid #0e1c0e", borderRadius:8, padding:"18px 20px", position:"relative" }}>
+                  <div style={{ position:"absolute", left:0, top:0, bottom:0, width:2, background:C.accent, borderRadius:"8px 0 0 8px", opacity:0.6 }}/>
+                  <p style={{ fontSize:"0.875rem", fontFamily:"'Georgia',serif", lineHeight:1.75, color:"#6a9a6a", margin:0, fontStyle:"italic" }}>{d.evidenceFor}</p>
+                </div>
+              </div>
+            )}
+            {d.evidenceAgainst && (
+              <div style={{ marginBottom:20 }}>
+                <p style={{ fontSize:"0.56rem", letterSpacing:"0.16em", textTransform:"uppercase", fontFamily:"system-ui", fontWeight:600, color:"#5c2525", marginBottom:12 }}>Contradicting evidence</p>
+                <div style={{ background:"#120909", border:"1px solid #1c0e0e", borderRadius:8, padding:"18px 20px", position:"relative" }}>
+                  <div style={{ position:"absolute", left:0, top:0, bottom:0, width:2, background:"#9e4a4a", borderRadius:"8px 0 0 8px", opacity:0.6 }}/>
+                  <p style={{ fontSize:"0.875rem", fontFamily:"'Georgia',serif", lineHeight:1.75, color:"#9a6a6a", margin:0, fontStyle:"italic" }}>{d.evidenceAgainst}</p>
+                </div>
+              </div>
+            )}
+            {!d.evidenceFor && !d.evidenceAgainst && (
+              <p style={{ fontSize:"0.875rem", fontFamily:"'Georgia',serif", color:"#2a2a2a", fontStyle:"italic" }}>No evidence recorded for this case.</p>
+            )}
+          </div>
+        )}
       </div>
     </div>
   );
 }
 
-// ── EVOLUTION VIEW ────────────────────────────────────────────────────────
+// ── EVOLUTION VIEW ─────────────────────────────────────────────────────────
 function EvolutionView({ evolutions }) {
   const themes = [...new Set(evolutions.map(e => e.theme))];
   if (!evolutions.length) return (
-    <div style={{ padding:"80px 0", textAlign:"center" }}>
-      <p style={{ ...T.body, color:C.textDim, fontStyle:"italic", marginBottom:"8px" }}>No beliefs tracked yet.</p>
-      <p style={{ ...T.caption, color:"#252525" }}>File observations to begin tracking how your thinking evolves.</p>
+    <div style={{ padding:"60px 0", textAlign:"center" }}>
+      <div style={{ width:48, height:48, borderRadius:"50%", border:"1px solid #1a1a1a", margin:"0 auto 20px", display:"flex", alignItems:"center", justifyContent:"center" }}>
+        <span style={{ fontSize:"1.2rem", opacity:0.3 }}>◎</span>
+      </div>
+      <p style={{ fontSize:"0.9rem", fontFamily:"'Georgia',serif", color:"#2a2a2a", fontStyle:"italic", marginBottom:8 }}>No beliefs tracked yet.</p>
+      <p style={{ fontSize:"0.75rem", fontFamily:"system-ui", color:"#1e1e1e" }}>File observations to begin tracking how your thinking evolves.</p>
     </div>
   );
   return (
     <div>
-      {themes.map(theme => {
+      {themes.map((theme, ti) => {
         const color = themeHue(theme);
         const entries = evolutions.filter(e => e.theme === theme).sort((a,b) => new Date(a.recordedAt)-new Date(b.recordedAt));
         return (
-          <section key={theme} style={{ marginBottom:"52px", animation:"nt-up 0.3s ease both" }}>
-            <div style={{ display:"flex", alignItems:"center", gap:"12px", marginBottom:"28px" }}>
-              <span style={{ ...T.label, background:color+"14", border:`1px solid ${color}28`, color, padding:"4px 12px", borderRadius:"4px", fontSize:"0.56rem" }}>{theme}</span>
-              <span style={{ ...T.caption, color:"#252525" }}>{entries.length} belief{entries.length!==1?"s":""}</span>
+          <section key={theme} style={{ marginBottom:48, animation:`nt-up 0.3s ease ${ti*0.08}s both` }}>
+            <div style={{ display:"flex", alignItems:"center", gap:12, marginBottom:24 }}>
+              <span style={{ fontSize:"0.56rem", letterSpacing:"0.16em", textTransform:"uppercase", fontFamily:"system-ui", fontWeight:700, background:color+"16", border:`1px solid ${color}2a`, color, padding:"4px 12px", borderRadius:4 }}>{theme}</span>
+              <span style={{ fontSize:"0.72rem", fontFamily:"system-ui", color:"#222" }}>{entries.length} belief{entries.length!==1?"s":""}</span>
             </div>
-            {entries.map((entry, i) => (
-              <div key={entry.id} style={{ display:"flex", gap:"20px", marginBottom:"28px" }}>
-                <div style={{ display:"flex", flexDirection:"column", alignItems:"center", paddingTop:"4px", width:"10px", flexShrink:0 }}>
-                  <div style={{ width:"8px", height:"8px", borderRadius:"50%", background:color, flexShrink:0 }}/>
-                  {i < entries.length-1 && <div style={{ width:"1px", flex:1, background:color+"1a", minHeight:"28px", marginTop:"6px" }}/>}
+            <div style={{ paddingLeft:4 }}>
+              {entries.map((entry, i) => (
+                <div key={entry.id} style={{ display:"flex", gap:20, marginBottom:i < entries.length-1 ? 0 : 0 }}>
+                  <div style={{ display:"flex", flexDirection:"column", alignItems:"center", width:12, flexShrink:0, paddingTop:4 }}>
+                    <div style={{ width:10, height:10, borderRadius:"50%", background:color, flexShrink:0, boxShadow:`0 0 8px ${color}66` }}/>
+                    {i < entries.length-1 && (
+                      <div style={{ width:1, flexGrow:1, background:`linear-gradient(${color}40, ${color}10)`, minHeight:32, marginTop:4 }}/>
+                    )}
+                  </div>
+                  <div style={{ flex:1, paddingBottom: i < entries.length-1 ? 28 : 0 }}>
+                    <p style={{ fontSize:"0.9rem", fontFamily:"'Georgia',serif", lineHeight:1.65, color:"#b0b0b0", fontStyle:"italic", margin:"0 0 5px" }}>{entry.belief}</p>
+                    <p style={{ fontSize:"0.7rem", fontFamily:"system-ui", color:"#282828", margin:"0 0 7px" }}>
+                      {new Date(entry.recordedAt).toLocaleDateString("en-IN", { day:"numeric", month:"short" })}
+                    </p>
+                    <p style={{ fontSize:"0.72rem", fontFamily:"system-ui", color:"#222", fontStyle:"italic", lineHeight:1.6, margin:0 }}>
+                      "{entry.sourceObservation?.slice(0,90)}{entry.sourceObservation?.length>90?"...":""}"
+                    </p>
+                  </div>
                 </div>
-                <div style={{ flex:1 }}>
-                  <p style={{ ...T.body, color:"#b0b0b0", fontStyle:"italic", margin:"0 0 5px", fontSize:"0.9rem" }}>{entry.belief}</p>
-                  <p style={{ ...T.caption, color:"#2a2a2a", margin:"0 0 7px" }}>
-                    {new Date(entry.recordedAt).toLocaleDateString("en-IN", { day:"numeric", month:"short" })}
-                  </p>
-                  <p style={{ ...T.caption, color:"#282828", fontStyle:"italic", margin:0, lineHeight:1.6 }}>
-                    "{entry.sourceObservation?.slice(0,90)}{entry.sourceObservation?.length>90?"...":""}"
-                  </p>
-                </div>
-              </div>
-            ))}
+              ))}
+            </div>
           </section>
         );
       })}
@@ -218,7 +329,16 @@ function EvolutionView({ evolutions }) {
   );
 }
 
-// ── MAIN APP ──────────────────────────────────────────────────────────────
+// ── EMPTY STATE ────────────────────────────────────────────────────────────
+const EmptyState = ({ icon, title, sub }) => (
+  <div style={{ padding:"60px 0", textAlign:"center", animation:"nt-up 0.4s ease" }}>
+    <div style={{ width:52, height:52, borderRadius:"50%", border:"1px solid #161616", background:"#0a0a0a", margin:"0 auto 20px", display:"flex", alignItems:"center", justifyContent:"center", fontSize:"1.4rem" }}>{icon}</div>
+    <p style={{ fontSize:"0.9rem", fontFamily:"'Georgia',serif", color:"#2a2a2a", fontStyle:"italic", marginBottom:8 }}>{title}</p>
+    <p style={{ fontSize:"0.75rem", fontFamily:"system-ui", color:"#1c1c1c", lineHeight:1.7 }}>{sub}</p>
+  </div>
+);
+
+// ── MAIN APP ───────────────────────────────────────────────────────────────
 export default function App() {
   const [user,         setUser]         = useState(null);
   const [authChecked,  setAuthChecked]  = useState(false);
@@ -234,6 +354,7 @@ export default function App() {
   const [totalObs,     setTotalObs]     = useState(0);
   const [loading,      setLoading]      = useState(false);
   const [error,        setError]        = useState(null);
+  const [expandedObs,  setExpandedObs]  = useState(null);
   const textareaRef = useRef(null);
 
   useEffect(() => {
@@ -302,48 +423,53 @@ export default function App() {
 
   if (!authChecked) return (
     <div style={{ minHeight:"100vh", background:C.bg, display:"flex", alignItems:"center", justifyContent:"center" }}>
-      <Spinner size={20}/>
+      <Spinner size={22}/>
     </div>
   );
   if (!user) return <LoginScreen/>;
 
   const [greetWord, greetSub] = greet();
+  const hasText = obsText.trim().length > 0;
+
   const navItems = [
     { key:"discovery", label:"Discoveries", count:discoveries.length },
     { key:"observe",   label:"Observe" },
-    { key:"evidence",  label:"Evidence",    count:totalObs },
-    { key:"evolution", label:"Evolution",   count:evolutions.length },
+    { key:"evidence",  label:"Evidence",  count:totalObs },
+    { key:"evolution", label:"Evolution", count:evolutions.length },
   ];
-
-  const hasText = obsText.trim().length > 0;
 
   return (
     <div style={{ minHeight:"100vh", background:C.bg, color:C.text, fontFamily:"'Georgia',serif" }}>
       <style>{`
         *,*::before,*::after { box-sizing:border-box; margin:0; padding:0; }
-        @keyframes nt-spin { to { transform:rotate(360deg); } }
-        @keyframes nt-up   { from { opacity:0; transform:translateY(8px); } to { opacity:1; transform:translateY(0); } }
+        @keyframes nt-spin    { to { transform:rotate(360deg); } }
+        @keyframes nt-up      { from { opacity:0; transform:translateY(10px); } to { opacity:1; transform:translateY(0); } }
+        @keyframes nt-fade    { from { opacity:0; } to { opacity:1; } }
+        @keyframes nt-modal   { from { opacity:0; transform:scale(0.96) translateY(10px); } to { opacity:1; transform:scale(1) translateY(0); } }
+        @keyframes nt-shimmer { 0%,100% { opacity:0.4; } 50% { opacity:0.7; } }
         ::-webkit-scrollbar       { width:3px; }
         ::-webkit-scrollbar-track { background:${C.bg}; }
         ::-webkit-scrollbar-thumb { background:#1a1a1a; border-radius:2px; }
         textarea         { caret-color:${C.accent}; }
-        textarea:focus   { outline:none !important; border-color:#1e3e1e !important; }
+        textarea:focus   { outline:none !important; border-color:#1e3e1e !important; box-shadow: 0 0 0 3px rgba(74,158,106,0.06) !important; }
         button:focus     { outline:none; }
       `}</style>
 
       {/* NAV */}
-      <header style={{ position:"sticky", top:0, zIndex:100, background:"rgba(7,7,7,0.97)", backdropFilter:"blur(16px)", borderBottom:`1px solid ${C.border}` }}>
-        <div style={{ maxWidth:"960px", margin:"0 auto", padding:"0 32px", display:"flex", alignItems:"center", height:"50px", gap:"32px" }}>
-          <span style={{ ...T.label, color:C.accent, fontSize:"0.62rem", flexShrink:0 }}>nowthink</span>
+      <header style={{ position:"sticky", top:0, zIndex:100, background:"rgba(6,6,6,0.97)", backdropFilter:"blur(20px)", borderBottom:"1px solid #0e0e0e" }}>
+        <div style={{ maxWidth:980, margin:"0 auto", padding:"0 32px", display:"flex", alignItems:"center", height:48, gap:28 }}>
+          <span style={{ fontSize:"0.62rem", letterSpacing:"0.28em", textTransform:"uppercase", fontFamily:"system-ui", fontWeight:700, color:C.accent, flexShrink:0 }}>nowthink</span>
           <nav style={{ display:"flex", flex:1 }}>
             {navItems.map(item => {
               const active = view === item.key;
               return (
                 <button key={item.key} onClick={() => setView(item.key)}
-                  style={{ background:"none", border:"none", padding:"0 14px", height:"50px", display:"flex", alignItems:"center", gap:"7px", color:active ? C.text : C.textDim, fontSize:"0.78rem", fontFamily:"system-ui", letterSpacing:"-0.01em", borderBottom:`2px solid ${active ? C.accent : "transparent"}`, transition:"color 0.15s, border-color 0.15s", position:"relative", top:"1px" }}>
+                  style={{ background:"none", border:"none", padding:"0 13px", height:48, display:"flex", alignItems:"center", gap:7, color:active ? C.text : "#2e2e2e", fontSize:"0.76rem", fontFamily:"system-ui", letterSpacing:"-0.01em", borderBottom:`2px solid ${active ? C.accent : "transparent"}`, transition:"color 0.2s, border-color 0.2s", position:"relative", top:1, cursor:"pointer" }}
+                  onMouseEnter={e => { if(!active) e.currentTarget.style.color="#555"; }}
+                  onMouseLeave={e => { if(!active) e.currentTarget.style.color="#2e2e2e"; }}>
                   {item.label}
                   {item.count > 0 && (
-                    <span style={{ ...T.label, background:active ? "#0e200e" : "#111", color:active ? C.accent : "#2a2a2a", padding:"2px 6px", borderRadius:"3px", fontSize:"0.54rem", transition:"all 0.15s" }}>
+                    <span style={{ fontSize:"0.54rem", letterSpacing:"0.06em", fontFamily:"system-ui", fontWeight:600, background:active ? "#0e200e" : "#0e0e0e", color:active ? C.accent : "#2a2a2a", padding:"2px 6px", borderRadius:3, transition:"all 0.2s" }}>
                       {item.count}
                     </span>
                   )}
@@ -351,15 +477,15 @@ export default function App() {
               );
             })}
           </nav>
-          <div style={{ display:"flex", alignItems:"center", gap:"10px", flexShrink:0 }}>
+          <div style={{ display:"flex", alignItems:"center", gap:10, flexShrink:0 }}>
             {user?.picture
-              ? <img src={user.picture} alt="" style={{ width:"24px", height:"24px", borderRadius:"50%", opacity:0.8 }}/>
-              : <div style={{ width:"24px", height:"24px", borderRadius:"50%", background:C.accentDim, display:"flex", alignItems:"center", justifyContent:"center", ...T.label, color:C.accent, fontSize:"0.6rem" }}>{user?.name?.[0]}</div>
+              ? <img src={user.picture} alt="" style={{ width:24, height:24, borderRadius:"50%", opacity:0.75 }}/>
+              : <div style={{ width:24, height:24, borderRadius:"50%", background:C.accentDim, display:"flex", alignItems:"center", justifyContent:"center", fontSize:"0.6rem", letterSpacing:"0.1em", fontFamily:"system-ui", fontWeight:700, color:C.accent }}>{user?.name?.[0]}</div>
             }
             <button onClick={handleLogout}
-              style={{ ...T.caption, background:"none", border:"none", color:"#252525", fontSize:"0.7rem", transition:"color 0.15s", padding:0 }}
-              onMouseEnter={e => e.currentTarget.style.color="#555"}
-              onMouseLeave={e => e.currentTarget.style.color="#252525"}>
+              style={{ fontSize:"0.7rem", fontFamily:"system-ui", background:"none", border:"none", color:"#1e1e1e", transition:"color 0.15s", cursor:"pointer", padding:0 }}
+              onMouseEnter={e => e.currentTarget.style.color="#444"}
+              onMouseLeave={e => e.currentTarget.style.color="#1e1e1e"}>
               Sign out
             </button>
           </div>
@@ -367,156 +493,177 @@ export default function App() {
       </header>
 
       {/* MAIN */}
-      <main style={{ maxWidth:"960px", margin:"0 auto", padding:"56px 32px 80px" }}>
+      <main style={{ maxWidth:980, margin:"0 auto", padding:"40px 32px 80px" }}>
 
         {error && (
-          <div style={{ background:"#140808", border:"1px solid #2a1010", borderRadius:"6px", padding:"12px 16px", marginBottom:"28px", display:"flex", justifyContent:"space-between", alignItems:"center", animation:"nt-up 0.2s ease" }}>
-            <span style={{ ...T.caption, color:"#9e4a4a" }}>{error}</span>
+          <div style={{ background:"#140808", border:"1px solid #2a1010", borderRadius:6, padding:"11px 16px", marginBottom:24, display:"flex", justifyContent:"space-between", alignItems:"center", animation:"nt-up 0.2s ease" }}>
+            <span style={{ fontSize:"0.78rem", fontFamily:"system-ui", color:"#9e4a4a" }}>{error}</span>
             <button onClick={() => setError(null)} style={{ background:"none", border:"none", color:"#3a3a3a", fontSize:"1.1rem", padding:"0 0 0 16px", cursor:"pointer" }}>×</button>
           </div>
         )}
 
-        {/* DISCOVERIES */}
+        {/* ── DISCOVERIES ── */}
         {view === "discovery" && (
           <div style={{ animation:"nt-up 0.3s ease" }}>
-            <div style={{ marginBottom:"44px" }}>
-              <h1 style={{ ...T.h1, color:C.text, fontSize:"clamp(1.7rem,3vw,2.1rem)", marginBottom:"8px" }}>Discoveries</h1>
-              <p style={{ ...T.caption, color:C.textDim }}>Evidence-based patterns the system has found in your observations</p>
-            </div>
-
-            <div style={{ background:"#0b140b", border:"1px solid #132013", borderRadius:"8px", padding:"22px 26px", marginBottom:"28px" }}>
-              <p style={{ ...T.label, color:totalObs >= 3 ? C.accentDim : "#2a3a2a", marginBottom:"10px", fontSize:"0.56rem" }}>
-                {totalObs < 3 ? `${3-totalObs} more observation${3-totalObs!==1?"s":""} needed` : "✓ investigation ready"}
-              </p>
-              <p style={{ ...T.body, color:"#3a3a3a", marginBottom:totalObs >= 3 ? "20px" : "0", fontSize:"0.875rem" }}>
-                {totalObs < 3
-                  ? "The system requires at least 3 observations before it can open a case."
-                  : "Enough evidence has been gathered. The system is ready to present its findings."}
-              </p>
-              {totalObs >= 3 && (
-                <button onClick={handleGenerate} disabled={generating}
-                  style={{ background:generating ? "transparent" : "#0e260e", border:`1px solid ${generating ? "#1a2a1a" : "#1e3e1e"}`, color:generating ? C.accentDim : C.accent, padding:"10px 20px", borderRadius:"6px", fontSize:"0.8rem", fontFamily:"system-ui", display:"inline-flex", alignItems:"center", gap:"10px", transition:"all 0.2s", letterSpacing:"-0.01em", cursor:generating ? "default" : "pointer" }}
-                  onMouseEnter={e => { if(!generating) e.currentTarget.style.borderColor="#2a4a2a"; }}
-                  onMouseLeave={e => { e.currentTarget.style.borderColor=generating?"#1a2a1a":"#1e3e1e"; }}>
-                  {generating ? <><Spinner size={14}/><span>Investigating...</span></> : "Open investigation →"}
-                </button>
+            <div style={{ display:"flex", justifyContent:"space-between", alignItems:"flex-end", marginBottom:28 }}>
+              <div>
+                <h1 style={{ fontSize:"clamp(1.6rem,3vw,2rem)", fontWeight:"normal", fontFamily:"'Georgia',serif", letterSpacing:"-0.025em", color:C.text, marginBottom:6 }}>Discoveries</h1>
+                <p style={{ fontSize:"0.75rem", fontFamily:"system-ui", color:C.textDim }}>Evidence-based patterns found in your observations</p>
+              </div>
+              {discoveries.length > 0 && (
+                <span style={{ fontSize:"0.64rem", fontFamily:"system-ui", color:"#1e2e1e", letterSpacing:"0.1em", textTransform:"uppercase" }}>{discoveries.length} case{discoveries.length!==1?"s":""} opened</span>
               )}
             </div>
 
+            {/* Investigation panel */}
+            <div style={{ background:"#0a130a", border:"1px solid #111e11", borderRadius:10, padding:"20px 24px", marginBottom:24, position:"relative", overflow:"hidden" }}>
+              <div style={{ position:"absolute", top:0, right:0, width:200, height:200, background:`radial-gradient(circle at top right, ${C.accentGlow}, transparent 70%)`, pointerEvents:"none" }}/>
+              <div style={{ position:"relative" }}>
+                <p style={{ fontSize:"0.56rem", letterSpacing:"0.16em", textTransform:"uppercase", fontFamily:"system-ui", fontWeight:600, color:totalObs >= 3 ? C.accentDim : "#1e2e1e", marginBottom:8 }}>
+                  {totalObs < 3 ? `${3-totalObs} more observation${3-totalObs!==1?"s":""} needed` : "✓ ready to investigate"}
+                </p>
+                <p style={{ fontSize:"0.85rem", fontFamily:"'Georgia',serif", color:"#2e2e2e", lineHeight:1.7, marginBottom:totalObs >= 3 ? 18 : 0 }}>
+                  {totalObs < 3
+                    ? "The system requires at least 3 observations before it can open a case."
+                    : "Enough evidence has been gathered. Ask the system what it found."}
+                </p>
+                {totalObs >= 3 && (
+                  <button onClick={handleGenerate} disabled={generating}
+                    style={{ background:generating ? "transparent" : "#0f2a0f", border:`1px solid ${generating ? "#1a2a1a" : "#1e4a1e"}`, color:generating ? C.accentDim : C.accent, padding:"9px 18px", borderRadius:6, fontSize:"0.78rem", fontFamily:"system-ui", display:"inline-flex", alignItems:"center", gap:9, transition:"all 0.2s cubic-bezier(0.4,0,0.2,1)", letterSpacing:"-0.01em", cursor:generating?"default":"pointer", position:"relative" }}
+                    onMouseEnter={e => { if(!generating){ e.currentTarget.style.borderColor="#2a5c2a"; e.currentTarget.style.transform="translateY(-1px)"; e.currentTarget.style.boxShadow=`0 4px 16px rgba(74,158,106,0.15)`; } }}
+                    onMouseLeave={e => { e.currentTarget.style.borderColor=generating?"#1a2a1a":"#1e4a1e"; e.currentTarget.style.transform="none"; e.currentTarget.style.boxShadow="none"; }}>
+                    {generating ? <><Spinner size={13}/>Investigating patterns...</> : "→ Open investigation"}
+                  </button>
+                )}
+              </div>
+            </div>
+
             {loading && !discoveries.length
-              ? <div style={{ display:"flex", justifyContent:"center", padding:"60px 0" }}><Spinner/></div>
+              ? <>{[0,1,2].map(i => <SkeletonCard key={i}/>)}</>
               : !discoveries.length
-                ? <div style={{ padding:"80px 0", textAlign:"center" }}>
-                    <p style={{ ...T.body, color:C.textDim, fontStyle:"italic", marginBottom:"8px" }}>No cases opened yet.</p>
-                    <p style={{ ...T.caption, color:"#252525" }}>File at least 3 observations and open your first investigation.</p>
-                  </div>
-                : discoveries.map(d => <CaseCard key={d.id} d={d} onClick={setSelectedCase}/>)
+                ? <EmptyState icon="◎" title="No cases opened yet." sub={`File ${Math.max(0,3-totalObs)} more observation${Math.max(0,3-totalObs)!==1?"s":""} and open your first investigation.`}/>
+                : discoveries.map((d,i) => <CaseCard key={d.id} d={d} onClick={setSelectedCase} index={i}/>)
             }
           </div>
         )}
 
-        {/* OBSERVE */}
+        {/* ── OBSERVE ── */}
         {view === "observe" && (
-          <div style={{ animation:"nt-up 0.3s ease", maxWidth:"640px" }}>
-            <div style={{ marginBottom:"40px" }}>
-              <h1 style={{ ...T.h1, color:C.text, fontSize:"clamp(1.7rem,3vw,2.1rem)", marginBottom:"8px" }}>{greetWord}</h1>
-              <p style={{ ...T.caption, color:C.textDim }}>{greetSub}</p>
+          <div style={{ animation:"nt-up 0.3s ease", maxWidth:620 }}>
+            <div style={{ marginBottom:32 }}>
+              <h1 style={{ fontSize:"clamp(1.6rem,3vw,2rem)", fontWeight:"normal", fontFamily:"'Georgia',serif", letterSpacing:"-0.025em", color:C.text, marginBottom:6 }}>{greetWord}</h1>
+              <p style={{ fontSize:"0.75rem", fontFamily:"system-ui", color:C.textDim }}>{greetSub}</p>
             </div>
 
-            <p style={{ ...T.caption, color:"#2c2c2c", fontStyle:"italic", marginBottom:"20px", lineHeight:1.8 }}>
-              Not "how was your day." What did you actually notice? Something recurring, surprising, or quietly avoided.
+            <p style={{ fontSize:"0.78rem", fontFamily:"system-ui", color:"#252525", fontStyle:"italic", marginBottom:18, lineHeight:1.8 }}>
+              Not "how was your day." What did you actually notice? Something recurring, surprising, or that you have been quietly avoiding.
             </p>
 
             <textarea ref={textareaRef} value={obsText}
               onChange={e => setObsText(e.target.value)}
               onKeyDown={e => { if (e.key==="Enter" && !e.shiftKey) { e.preventDefault(); handleObserve(); } }}
               placeholder="Write freely. The system will extract what matters."
-              style={{ width:"100%", minHeight:"160px", background:C.surface, border:`1px solid ${C.border}`, borderRadius:"8px", color:C.text, padding:"18px 20px", fontSize:"0.95rem", resize:"none", fontFamily:"'Georgia',serif", lineHeight:1.75, transition:"border-color 0.2s", display:"block" }}/>
+              style={{ width:"100%", minHeight:150, background:C.surface, border:`1px solid ${C.border}`, borderRadius:8, color:C.text, padding:"16px 18px", fontSize:"0.9rem", resize:"vertical", fontFamily:"'Georgia',serif", lineHeight:1.75, transition:"border-color 0.2s, box-shadow 0.2s", display:"block" }}/>
 
-            <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", marginTop:"12px", flexWrap:"wrap", gap:"12px" }}>
-              <span style={{ ...T.caption, color:"#202020", fontSize:"0.68rem" }}>Enter to file · Shift+Enter for new line</span>
-              <button onClick={handleObserve} disabled={submitting || !hasText}
-                style={{
-                  background: !hasText ? "transparent" : submitting ? "transparent" : "#0e260e",
-                  border: `1px solid ${!hasText ? "#111" : submitting ? "#1a2a1a" : "#1e3e1e"}`,
-                  color: !hasText ? "#202020" : submitting ? C.accentDim : C.accent,
-                  padding:"10px 18px", borderRadius:"6px", fontSize:"0.78rem", fontFamily:"system-ui",
-                  display:"inline-flex", alignItems:"center", gap:"8px", transition:"all 0.2s",
-                  letterSpacing:"-0.01em", whiteSpace:"nowrap",
-                  cursor: submitting || !hasText ? "default" : "pointer",
-                }}>
-                {submitting ? <><Spinner size={13}/>Filing...</> : "File observation →"}
-              </button>
+            {/* Live character hint */}
+            <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", marginTop:10, flexWrap:"wrap", gap:10 }}>
+              <span style={{ fontSize:"0.67rem", fontFamily:"system-ui", color:"#1c1c1c" }}>Enter to file · Shift+Enter for new line</span>
+              <div style={{ display:"flex", alignItems:"center", gap:10 }}>
+                {hasText && <span style={{ fontSize:"0.67rem", fontFamily:"system-ui", color:"#252525" }}>{obsText.length} chars</span>}
+                <button onClick={handleObserve} disabled={submitting || !hasText}
+                  style={{
+                    background: !hasText ? "transparent" : submitting ? "transparent" : "#0f2a0f",
+                    border:`1px solid ${!hasText ? "#0e0e0e" : submitting ? "#1a2a1a" : "#1e4a1e"}`,
+                    color: !hasText ? "#1a1a1a" : submitting ? C.accentDim : C.accent,
+                    padding:"9px 16px", borderRadius:6, fontSize:"0.76rem", fontFamily:"system-ui",
+                    display:"inline-flex", alignItems:"center", gap:8, transition:"all 0.2s", letterSpacing:"-0.01em",
+                    whiteSpace:"nowrap", cursor:submitting||!hasText?"default":"pointer",
+                  }}
+                  onMouseEnter={e => { if(hasText && !submitting){ e.currentTarget.style.transform="translateY(-1px)"; e.currentTarget.style.boxShadow=`0 4px 16px rgba(74,158,106,0.12)`; e.currentTarget.style.borderColor="#2a5c2a"; } }}
+                  onMouseLeave={e => { e.currentTarget.style.transform="none"; e.currentTarget.style.boxShadow="none"; e.currentTarget.style.borderColor=!hasText?"#0e0e0e":submitting?"#1a2a1a":"#1e4a1e"; }}>
+                  {submitting ? <><Spinner size={12}/>Filing...</> : "→ File observation"}
+                </button>
+              </div>
             </div>
 
             {lastResult && (
-              <div style={{ marginTop:"28px", background:"#09120a", border:"1px solid #0e1c0e", borderRadius:"8px", padding:"18px 20px", animation:"nt-up 0.3s ease" }}>
-                <p style={{ ...T.label, color:C.accentDim, marginBottom:"10px", fontSize:"0.56rem" }}>Observation filed</p>
-                <p style={{ ...T.body, color:"#7aba7a", fontStyle:"italic", marginBottom:"10px", fontSize:"0.9rem" }}>{lastResult.theme}</p>
-                <div style={{ display:"flex", gap:"14px", flexWrap:"wrap" }}>
-                  <span style={{ ...T.caption, color:"#2a4a2a" }}>Energy {lastResult.energyScore}/10</span>
-                  <span style={{ color:"#162016" }}>·</span>
-                  <span style={{ ...T.caption, color:"#2a4a2a" }}>{lastResult.totalObservations} total</span>
-                  {lastResult.readyForDiscovery && <>
-                    <span style={{ color:"#162016" }}>·</span>
-                    <span style={{ ...T.caption, color:C.accent }}>Ready for investigation</span>
-                  </>}
+              <div style={{ marginTop:24, background:"#091209", border:"1px solid #0d1c0d", borderRadius:8, padding:"16px 20px", animation:"nt-up 0.3s ease", position:"relative", overflow:"hidden" }}>
+                <div style={{ position:"absolute", left:0, top:0, bottom:0, width:2, background:C.accent, opacity:0.8 }}/>
+                <p style={{ fontSize:"0.56rem", letterSpacing:"0.16em", textTransform:"uppercase", fontFamily:"system-ui", fontWeight:600, color:C.accentDim, marginBottom:10 }}>Observation filed</p>
+                <p style={{ fontSize:"0.875rem", fontFamily:"'Georgia',serif", color:"#7aba7a", fontStyle:"italic", marginBottom:10 }}>{lastResult.theme}</p>
+                <div style={{ display:"flex", gap:12, flexWrap:"wrap" }}>
+                  {[
+                    `Energy ${lastResult.energyScore}/10`,
+                    `${lastResult.totalObservations} total`,
+                    lastResult.readyForDiscovery ? "✓ Ready for investigation" : null,
+                  ].filter(Boolean).map((item, i) => (
+                    <span key={i} style={{ fontSize:"0.7rem", fontFamily:"system-ui", color:item.startsWith("✓") ? C.accent : "#2a4a2a" }}>{item}</span>
+                  ))}
                 </div>
               </div>
             )}
           </div>
         )}
 
-        {/* EVIDENCE */}
+        {/* ── EVIDENCE ── */}
         {view === "evidence" && (
           <div style={{ animation:"nt-up 0.3s ease" }}>
-            <div style={{ marginBottom:"44px" }}>
-              <h1 style={{ ...T.h1, color:C.text, fontSize:"clamp(1.7rem,3vw,2.1rem)", marginBottom:"8px" }}>Evidence</h1>
-              <p style={{ ...T.caption, color:C.textDim }}>{totalObs} observation{totalObs!==1?"s":""} on record</p>
+            <div style={{ display:"flex", justifyContent:"space-between", alignItems:"flex-end", marginBottom:28 }}>
+              <div>
+                <h1 style={{ fontSize:"clamp(1.6rem,3vw,2rem)", fontWeight:"normal", fontFamily:"'Georgia',serif", letterSpacing:"-0.025em", color:C.text, marginBottom:6 }}>Evidence</h1>
+                <p style={{ fontSize:"0.75rem", fontFamily:"system-ui", color:C.textDim }}>{totalObs} observation{totalObs!==1?"s":""} on record</p>
+              </div>
             </div>
 
             {loading && !observations.length
-              ? <div style={{ display:"flex", justifyContent:"center", padding:"60px 0" }}><Spinner/></div>
+              ? <>{[0,1,2].map(i => <SkeletonCard key={i}/>)}</>
               : !observations.length
-                ? <div style={{ padding:"80px 0", textAlign:"center" }}>
-                    <p style={{ ...T.body, color:C.textDim, fontStyle:"italic", marginBottom:"8px" }}>No observations yet.</p>
-                    <p style={{ ...T.caption, color:"#252525" }}>Go to Observe to file your first one.</p>
-                  </div>
-                : observations.map(obs => (
-                  <article key={obs.id}
-                    style={{ background:C.surface, border:`1px solid ${C.border}`, borderRadius:"8px", padding:"18px 22px", marginBottom:"8px", transition:"border-color 0.15s", animation:"nt-up 0.25s ease" }}
-                    onMouseEnter={e => e.currentTarget.style.borderColor=C.borderHov}
-                    onMouseLeave={e => e.currentTarget.style.borderColor=C.border}>
-                    <div style={{ display:"flex", alignItems:"center", gap:"10px", marginBottom:"12px", flexWrap:"wrap" }}>
-                      <span style={{ ...T.label, color:"#1a2a1a", fontSize:"0.54rem" }}>OBS #{obs.id}</span>
-                      {obs.extractedTheme && obs.extractedTheme !== "Unnamed observation" &&
-                        <span style={{ ...T.caption, color:"#3a5a3a", fontStyle:"italic", fontSize:"0.72rem" }}>{obs.extractedTheme}</span>}
-                      <div style={{ marginLeft:"auto", display:"flex", alignItems:"center", gap:"4px" }}>
-                        {Array.from({ length:10 }).map((_,i) => (
-                          <div key={i} style={{ width:"3px", height:"14px", borderRadius:"1.5px", background:i < obs.energyScore ? confColor(obs.energyScore*10) : "#161616" }}/>
-                        ))}
-                        <span style={{ ...T.caption, color:"#2a2a2a", marginLeft:"8px", fontSize:"0.68rem" }}>{obs.energyScore}/10</span>
+                ? <EmptyState icon="○" title="No observations yet." sub="Go to Observe and file your first one."/>
+                : observations.map((obs, i) => {
+                  const expanded = expandedObs === obs.id;
+                  return (
+                    <article key={obs.id}
+                      onClick={() => setExpandedObs(expanded ? null : obs.id)}
+                      style={{ background:C.surface, border:`1px solid ${expanded ? C.borderAccent : C.border}`, borderRadius:9, padding:"16px 20px", marginBottom:7, transition:"all 0.2s cubic-bezier(0.4,0,0.2,1)", cursor:"pointer", animation:`nt-up 0.25s ease ${i*0.04}s both`, position:"relative", overflow:"hidden" }}
+                      onMouseEnter={e => { e.currentTarget.style.borderColor=expanded?C.borderAccent:C.borderHov; e.currentTarget.style.transform="translateY(-1px)"; }}
+                      onMouseLeave={e => { e.currentTarget.style.borderColor=expanded?C.borderAccent:C.border; e.currentTarget.style.transform="none"; }}>
+                      {expanded && <div style={{ position:"absolute", left:0, top:0, bottom:0, width:2, background:C.accent, opacity:0.5 }}/>}
+                      <div style={{ display:"flex", alignItems:"center", gap:10, marginBottom:10, flexWrap:"wrap" }}>
+                        <span style={{ fontSize:"0.54rem", letterSpacing:"0.14em", textTransform:"uppercase", fontFamily:"system-ui", fontWeight:600, color:"#1a2a1a" }}>Obs #{obs.id}</span>
+                        {obs.extractedTheme && obs.extractedTheme !== "Unnamed observation" && (
+                          <span style={{ fontSize:"0.7rem", fontFamily:"system-ui", color:"#3a5a3a", fontStyle:"italic" }}>{obs.extractedTheme}</span>
+                        )}
+                        <div style={{ marginLeft:"auto", display:"flex", alignItems:"center", gap:3 }}>
+                          {Array.from({ length:10 }).map((_,j) => (
+                            <div key={j} style={{ width:3, height:j < obs.energyScore ? 14 : 8, borderRadius:1.5, background:j < obs.energyScore ? confColor(obs.energyScore*10) : "#141414", transition:"height 0.2s ease" }}/>
+                          ))}
+                          <span style={{ fontSize:"0.66rem", fontFamily:"system-ui", color:"#252525", marginLeft:8 }}>{obs.energyScore}/10</span>
+                        </div>
                       </div>
-                    </div>
-                    <p style={{ ...T.body, color:C.textMid, marginBottom:"10px", fontSize:"0.875rem" }}>{obs.rawText}</p>
-                    <p style={{ ...T.caption, color:"#252525", fontSize:"0.66rem" }}>
-                      {new Date(obs.createdAt).toLocaleDateString("en-IN", { day:"numeric", month:"short", year:"numeric", hour:"2-digit", minute:"2-digit" })}
-                    </p>
-                  </article>
-                ))
+                      <p style={{ fontSize:"0.875rem", fontFamily:"'Georgia',serif", color:"#686868", lineHeight:1.65, marginBottom:expanded?10:0 }}>
+                        {expanded ? obs.rawText : obs.rawText.slice(0,120) + (obs.rawText.length > 120 ? "..." : "")}
+                      </p>
+                      {expanded && (
+                        <p style={{ fontSize:"0.66rem", fontFamily:"system-ui", color:"#222", marginTop:8, animation:"nt-up 0.2s ease" }}>
+                          {new Date(obs.createdAt).toLocaleDateString("en-IN", { day:"numeric", month:"short", year:"numeric", hour:"2-digit", minute:"2-digit" })}
+                        </p>
+                      )}
+                    </article>
+                  );
+                })
             }
           </div>
         )}
 
-        {/* EVOLUTION */}
+        {/* ── EVOLUTION ── */}
         {view === "evolution" && (
           <div style={{ animation:"nt-up 0.3s ease" }}>
-            <div style={{ marginBottom:"44px" }}>
-              <h1 style={{ ...T.h1, color:C.text, fontSize:"clamp(1.7rem,3vw,2.1rem)", marginBottom:"8px" }}>Thought Evolution</h1>
-              <p style={{ ...T.caption, color:C.textDim }}>How your beliefs shift over time</p>
+            <div style={{ marginBottom:28 }}>
+              <h1 style={{ fontSize:"clamp(1.6rem,3vw,2rem)", fontWeight:"normal", fontFamily:"'Georgia',serif", letterSpacing:"-0.025em", color:C.text, marginBottom:6 }}>Thought Evolution</h1>
+              <p style={{ fontSize:"0.75rem", fontFamily:"system-ui", color:C.textDim }}>How your beliefs shift over time</p>
             </div>
             {loading && !evolutions.length
-              ? <div style={{ display:"flex", justifyContent:"center", padding:"60px 0" }}><Spinner/></div>
+              ? <>{[0,1].map(i => <SkeletonCard key={i}/>)}</>
               : <EvolutionView evolutions={evolutions}/>
             }
           </div>
