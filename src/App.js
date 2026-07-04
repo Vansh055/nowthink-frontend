@@ -770,62 +770,260 @@ useEffect(() => {
         )}
 
         {/* ── OBSERVE ── */}
-        {view === "observe" && (
-          <div style={{ animation:"nt-up 0.3s ease", maxWidth:620 }}>
-            <div style={{ marginBottom:32 }}>
-              <h1 style={{ fontSize:"clamp(1.6rem,3vw,2rem)", fontWeight:"normal", fontFamily:"'Georgia',serif", letterSpacing:"-0.025em", color:C.text, marginBottom:6 }}>{greetWord}</h1>
-              <p style={{ fontSize:"0.75rem", fontFamily:"system-ui", color:C.textDim }}>{greetSub}</p>
-            </div>
+{view === "observe" && (
+  <div
+    style={{
+      animation: "nt-up 0.3s ease",
+      maxWidth: 620,
+      padding: isMobile ? "0 4px" : 0,
+    }}
+  >
+    <div style={{ marginBottom: isMobile ? 26 : 32 }}>
+      <h1
+        style={{
+          fontSize: isMobile ? "2.6rem" : "clamp(1.6rem,3vw,2rem)",
+          lineHeight: 1.05,
+          fontWeight: "normal",
+          fontFamily: "'Georgia',serif",
+          letterSpacing: "-0.025em",
+          color: C.text,
+          marginBottom: 8,
+        }}
+      >
+        {greetWord}
+      </h1>
 
-            <p style={{ fontSize:"0.78rem", fontFamily:"system-ui", color:"#252525", fontStyle:"italic", marginBottom:18, lineHeight:1.8 }}>
-              Not "how was your day." What did you actually notice? Something recurring, surprising, or that you have been quietly avoiding.
-            </p>
+      <p
+        style={{
+          fontSize: isMobile ? ".9rem" : "0.75rem",
+          lineHeight: 1.7,
+          fontFamily: "system-ui",
+          color: C.textDim,
+          maxWidth: 520,
+        }}
+      >
+        {greetSub}
+      </p>
+    </div>
 
-            <textarea ref={textareaRef} value={obsText}
-              onChange={e => setObsText(e.target.value)}
-              onKeyDown={e => { if (e.key==="Enter" && !e.shiftKey) { e.preventDefault(); handleObserve(); } }}
-              placeholder="Write freely. The system will extract what matters."
-              style={{ width:"100%", minHeight:150, background:C.surface, border:`1px solid ${C.border}`, borderRadius:8, color:C.text, padding:"16px 18px", fontSize:"0.9rem", resize:"vertical", fontFamily:"'Georgia',serif", lineHeight:1.75, transition:"border-color 0.2s, box-shadow 0.2s", display:"block" }}/>
+    <p
+      style={{
+        fontSize: isMobile ? ".92rem" : "0.78rem",
+        fontFamily: "system-ui",
+        color: "#252525",
+        fontStyle: "italic",
+        marginBottom: 22,
+        lineHeight: 1.8,
+      }}
+    >
+      Not "how was your day." What did you actually notice? Something
+      recurring, surprising, or that you have been quietly avoiding.
+    </p>
 
-            {/* Live character hint */}
-            <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", marginTop:10, flexWrap:"wrap", gap:10 }}>
-              <span style={{ fontSize:"0.67rem", fontFamily:"system-ui", color:"#1c1c1c" }}>Enter to file · Shift+Enter for new line</span>
-              <div style={{ display:"flex", alignItems:"center", gap:10 }}>
-                {hasText && <span style={{ fontSize:"0.67rem", fontFamily:"system-ui", color:"#252525" }}>{obsText.length} chars</span>}
-                <button onClick={handleObserve} disabled={submitting || !hasText}
-                  style={{
-                    background: !hasText ? "transparent" : submitting ? "transparent" : "#0f2a0f",
-                    border:`1px solid ${!hasText ? "#0e0e0e" : submitting ? "#1a2a1a" : "#1e4a1e"}`,
-                    color: !hasText ? "#1a1a1a" : submitting ? C.accentDim : C.accent,
-                    padding:"9px 16px", borderRadius:6, fontSize:"0.76rem", fontFamily:"system-ui",
-                    display:"inline-flex", alignItems:"center", gap:8, transition:"all 0.2s", letterSpacing:"-0.01em",
-                    whiteSpace:"nowrap", cursor:submitting||!hasText?"default":"pointer",
-                  }}
-                  onMouseEnter={e => { if(hasText && !submitting){ e.currentTarget.style.transform="translateY(-1px)"; e.currentTarget.style.boxShadow=`0 4px 16px rgba(74,158,106,0.12)`; e.currentTarget.style.borderColor="#2a5c2a"; } }}
-                  onMouseLeave={e => { e.currentTarget.style.transform="none"; e.currentTarget.style.boxShadow="none"; e.currentTarget.style.borderColor=!hasText?"#0e0e0e":submitting?"#1a2a1a":"#1e4a1e"; }}>
-                  {submitting ? <><Spinner size={12}/>Filing...</> : "→ File observation"}
-                </button>
-              </div>
-            </div>
+    <textarea
+      ref={textareaRef}
+      value={obsText}
+      onChange={(e) => setObsText(e.target.value)}
+      onKeyDown={(e) => {
+        if (e.key === "Enter" && !e.shiftKey) {
+          e.preventDefault();
+          handleObserve();
+        }
+      }}
+      placeholder="Write freely. The system will extract what matters."
+      style={{
+        width: "100%",
+        minHeight: isMobile ? 180 : 150,
+        background: C.surface,
+        border: `1px solid ${C.border}`,
+        borderRadius: 12,
+        color: C.text,
+        padding: isMobile ? "20px" : "16px 18px",
+        fontSize: isMobile ? "1.05rem" : "0.9rem",
+        resize: "vertical",
+        fontFamily: "'Georgia',serif",
+        lineHeight: 1.8,
+        transition: "border-color .2s, box-shadow .2s",
+        display: "block",
+      }}
+    />
 
-            {lastResult && (
-              <div style={{ marginTop:24, background:"#091209", border:"1px solid #0d1c0d", borderRadius:8, padding:"16px 20px", animation:"nt-up 0.3s ease", position:"relative", overflow:"hidden" }}>
-                <div style={{ position:"absolute", left:0, top:0, bottom:0, width:2, background:C.accent, opacity:0.8 }}/>
-                <p style={{ fontSize:"0.56rem", letterSpacing:"0.16em", textTransform:"uppercase", fontFamily:"system-ui", fontWeight:600, color:C.accentDim, marginBottom:10 }}>Observation filed</p>
-                <p style={{ fontSize:"0.875rem", fontFamily:"'Georgia',serif", color:"#7aba7a", fontStyle:"italic", marginBottom:10 }}>{lastResult.theme}</p>
-                <div style={{ display:"flex", gap:12, flexWrap:"wrap" }}>
-                  {[
-                    `Energy ${lastResult.energyScore}/10`,
-                    `${lastResult.totalObservations} total`,
-                    lastResult.readyForDiscovery ? "✓ Ready for investigation" : null,
-                  ].filter(Boolean).map((item, i) => (
-                    <span key={i} style={{ fontSize:"0.7rem", fontFamily:"system-ui", color:item.startsWith("✓") ? C.accent : "#2a4a2a" }}>{item}</span>
-                  ))}
-                </div>
-              </div>
-            )}
-          </div>
+    <div
+      style={{
+        display: "flex",
+        flexDirection: isMobile ? "column" : "row",
+        alignItems: isMobile ? "stretch" : "center",
+        justifyContent: "space-between",
+        gap: isMobile ? 18 : 10,
+        marginTop: 16,
+      }}
+    >
+      {!isMobile && (
+        <span
+          style={{
+            fontSize: "0.67rem",
+            fontFamily: "system-ui",
+            color: "#1c1c1c",
+          }}
+        >
+          Enter to file · Shift+Enter for new line
+        </span>
+      )}
+
+      <div
+        style={{
+          display: "flex",
+          flexDirection: isMobile ? "column" : "row",
+          alignItems: isMobile ? "stretch" : "center",
+          gap: 10,
+          width: isMobile ? "100%" : "auto",
+        }}
+      >
+        {hasText && (
+          <span
+            style={{
+              fontSize: ".7rem",
+              fontFamily: "system-ui",
+              color: "#333",
+              textAlign: isMobile ? "right" : "left",
+            }}
+          >
+            {obsText.length} characters
+          </span>
         )}
+
+        <button
+          onClick={handleObserve}
+          disabled={submitting || !hasText}
+          style={{
+            width: isMobile ? "100%" : "auto",
+            height: isMobile ? 54 : "auto",
+            background: !hasText
+              ? "transparent"
+              : submitting
+              ? "transparent"
+              : "#0f2a0f",
+            border: `1px solid ${
+              !hasText
+                ? "#0e0e0e"
+                : submitting
+                ? "#1a2a1a"
+                : "#1e4a1e"
+            }`,
+            color: !hasText
+              ? "#1a1a1a"
+              : submitting
+              ? C.accentDim
+              : C.accent,
+            padding: isMobile ? "0 20px" : "9px 16px",
+            borderRadius: 8,
+            fontSize: isMobile ? ".95rem" : "0.76rem",
+            fontFamily: "system-ui",
+            display: "inline-flex",
+            justifyContent: "center",
+            alignItems: "center",
+            gap: 8,
+            transition: "all .2s",
+            cursor:
+              submitting || !hasText ? "default" : "pointer",
+          }}
+        >
+          {submitting ? (
+            <>
+              <Spinner size={12} />
+              Filing...
+            </>
+          ) : (
+            "→ File observation"
+          )}
+        </button>
+      </div>
+    </div>
+
+    {lastResult && (
+      <div
+        style={{
+          marginTop: 28,
+          background: "#091209",
+          border: "1px solid #0d1c0d",
+          borderRadius: 10,
+          padding: "18px 22px",
+          animation: "nt-up .3s ease",
+          position: "relative",
+          overflow: "hidden",
+        }}
+      >
+        <div
+          style={{
+            position: "absolute",
+            left: 0,
+            top: 0,
+            bottom: 0,
+            width: 2,
+            background: C.accent,
+          }}
+        />
+
+        <p
+          style={{
+            fontSize: ".58rem",
+            letterSpacing: ".16em",
+            textTransform: "uppercase",
+            fontFamily: "system-ui",
+            fontWeight: 600,
+            color: C.accentDim,
+            marginBottom: 10,
+          }}
+        >
+          Observation filed
+        </p>
+
+        <p
+          style={{
+            fontSize: ".92rem",
+            fontFamily: "'Georgia', serif",
+            color: "#7aba7a",
+            fontStyle: "italic",
+            marginBottom: 12,
+          }}
+        >
+          {lastResult.theme}
+        </p>
+
+        <div
+          style={{
+            display: "flex",
+            flexWrap: "wrap",
+            gap: 12,
+          }}
+        >
+          {[
+            `Energy ${lastResult.energyScore}/10`,
+            `${lastResult.totalObservations} total`,
+            lastResult.readyForDiscovery
+              ? "✓ Ready for investigation"
+              : null,
+          ]
+            .filter(Boolean)
+            .map((item, i) => (
+              <span
+                key={i}
+                style={{
+                  fontSize: ".7rem",
+                  fontFamily: "system-ui",
+                  color: item.startsWith("✓")
+                    ? C.accent
+                    : "#2a4a2a",
+                }}
+              >
+                {item}
+              </span>
+            ))}
+        </div>
+      </div>
+    )}
+  </div>
+)}
 
         {/* ── EVIDENCE ── */}
         {view === "evidence" && (
