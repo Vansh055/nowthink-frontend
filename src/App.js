@@ -487,6 +487,7 @@ useEffect(() => {
     position: "sticky",
     top: 0,
     zIndex: 100,
+    overflow: "visible",
     background: "rgba(6,6,6,0.97)",
     backdropFilter: "blur(20px)",
     borderBottom: "1px solid #0e0e0e",
@@ -614,80 +615,104 @@ useEffect(() => {
       </>
     )}
 
-    {/* Mobile Hamburger */}
-    {isMobile && (
-      <button
-        onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-        style={{
-          background: "none",
-          border: "none",
-          color: "#ddd",
-          fontSize: "1.4rem",
-          cursor: "pointer",
-        }}
-      >
-        ☰
-      </button>
-    )}
-  </div>
-</header>
-{isMobile && mobileMenuOpen && (
-  <div
-    style={{
-      position: "fixed",
-      top: 56,
-      left: 0,
-      width: "100%",
-      background: "#090909",
-      borderBottom: "1px solid #151515",
-      zIndex: 99,
-      animation: "nt-fade .2s ease",
-    }}
-  >
-    {navItems.map((item) => {
-      const active = view === item.key;
-
-      return (
-        <button
-          key={item.key}
-          onClick={() => {
-            setView(item.key);
-            setMobileMenuOpen(false);
-          }}
-          style={{
-            width: "100%",
-            background: "none",
-            border: "none",
-            color: active ? C.accent : "#ddd",
-            textAlign: "left",
-            padding: "16px 22px",
-            fontSize: "0.95rem",
-            borderBottom: "1px solid #111",
-            cursor: "pointer",
-          }}
-        >
-          {item.label}
-        </button>
-      );
-    })}
-
+    {/* Mobile Navigation */}
+{isMobile && (
+  <>
     <button
-      onClick={handleLogout}
+      onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
       style={{
-        width: "100%",
         background: "none",
         border: "none",
-        textAlign: "left",
-        padding: "16px 22px",
-        color: "#ff6b6b",
-        fontSize: "0.95rem",
+        color: "#ddd",
+        fontSize: "1.6rem",
         cursor: "pointer",
+        padding: 4,
+        transition: "transform .25s ease",
       }}
     >
-      Sign out
+      {mobileMenuOpen ? "✕" : "☰"}
     </button>
-  </div>
+
+    <div
+  style={{
+    position: "fixed",
+    top: 56,
+    left: 0,
+    width: "100%",
+    background: "#080808",
+    borderBottom: "1px solid #151515",
+    overflow: "hidden",
+    maxHeight: mobileMenuOpen ? 400 : 0,
+    opacity: mobileMenuOpen ? 1 : 0,
+    transition: "all .28s ease",
+    zIndex: 999,
+  }}
+>
+      {navItems.map((item) => {
+        const active = view === item.key;
+
+        return (
+          <button
+            key={item.key}
+            onClick={() => {
+              setView(item.key);
+              setMobileMenuOpen(false);
+            }}
+            style={{
+              width: "100%",
+              height: 58,
+              padding: "0 22px",
+              border: "none",
+              background: "transparent",
+              borderBottom: "1px solid #111",
+              color: active ? C.accent : "#d8d8d8",
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+              fontFamily: "'Georgia', serif",
+              fontSize: "1rem",
+              cursor: "pointer",
+            }}
+          >
+            <span>{item.label}</span>
+
+            {item.count > 0 && (
+              <span
+                style={{
+                  fontSize: ".72rem",
+                  color: C.accent,
+                  opacity: .8,
+                }}
+              >
+                {item.count}
+              </span>
+            )}
+          </button>
+        );
+      })}
+
+      <button
+        onClick={handleLogout}
+        style={{
+          width: "100%",
+          height: 58,
+          border: "none",
+          background: "transparent",
+          color: "#dd6666",
+          textAlign: "left",
+          padding: "0 22px",
+          cursor: "pointer",
+          fontFamily: "'Georgia', serif",
+          fontSize: "1rem",
+        }}
+      >
+        Sign out
+      </button>
+    </div>
+  </>
 )}
+ </div>
+</header>
 
       {/* MAIN */}
       <main style={{ maxWidth:980, margin:"0 auto", padding:"40px 32px 80px" }}>
