@@ -338,6 +338,9 @@ const EmptyState = ({ icon, title, sub }) => (
   </div>
 );
 
+const MOBILE_BREAKPOINT = 768;
+
+
 // ── MAIN APP ───────────────────────────────────────────────────────────────
 export default function App() {
   const [user,         setUser]         = useState(null);
@@ -356,6 +359,29 @@ export default function App() {
   const [error,        setError]        = useState(null);
   const [expandedObs,  setExpandedObs]  = useState(null);
   const textareaRef = useRef(null);
+
+  const [isMobile, setIsMobile] = useState(
+  () => window.innerWidth <= MOBILE_BREAKPOINT
+);
+
+const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+
+useEffect(() => {
+  const handleResize = () => {
+    const mobile = window.innerWidth <= MOBILE_BREAKPOINT;
+    setIsMobile(mobile);
+
+    if (!mobile) {
+      setMobileMenuOpen(false);
+    }
+  };
+
+  handleResize(); // Run once on mount
+
+  window.addEventListener("resize", handleResize);
+
+  return () => window.removeEventListener("resize", handleResize);
+}, []);
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
@@ -456,41 +482,212 @@ export default function App() {
       `}</style>
 
       {/* NAV */}
-      <header style={{ position:"sticky", top:0, zIndex:100, background:"rgba(6,6,6,0.97)", backdropFilter:"blur(20px)", borderBottom:"1px solid #0e0e0e" }}>
-        <div style={{ maxWidth:980, margin:"0 auto", padding:"0 32px", display:"flex", alignItems:"center", height:48, gap:28 }}>
-          <span style={{ fontSize:"0.62rem", letterSpacing:"0.28em", textTransform:"uppercase", fontFamily:"system-ui", fontWeight:700, color:C.accent, flexShrink:0 }}>nowthink</span>
-          <nav style={{ display:"flex", flex:1 }}>
-            {navItems.map(item => {
-              const active = view === item.key;
-              return (
-                <button key={item.key} onClick={() => setView(item.key)}
-                  style={{ background:"none", border:"none", padding:"0 13px", height:48, display:"flex", alignItems:"center", gap:7, color:active ? C.text : "#2e2e2e", fontSize:"0.76rem", fontFamily:"system-ui", letterSpacing:"-0.01em", borderBottom:`2px solid ${active ? C.accent : "transparent"}`, transition:"color 0.2s, border-color 0.2s", position:"relative", top:1, cursor:"pointer" }}
-                  onMouseEnter={e => { if(!active) e.currentTarget.style.color="#555"; }}
-                  onMouseLeave={e => { if(!active) e.currentTarget.style.color="#2e2e2e"; }}>
-                  {item.label}
-                  {item.count > 0 && (
-                    <span style={{ fontSize:"0.54rem", letterSpacing:"0.06em", fontFamily:"system-ui", fontWeight:600, background:active ? "#0e200e" : "#0e0e0e", color:active ? C.accent : "#2a2a2a", padding:"2px 6px", borderRadius:3, transition:"all 0.2s" }}>
-                      {item.count}
-                    </span>
-                  )}
-                </button>
-              );
-            })}
-          </nav>
-          <div style={{ display:"flex", alignItems:"center", gap:10, flexShrink:0 }}>
-            {user?.picture
-              ? <img src={user.picture} alt="" style={{ width:24, height:24, borderRadius:"50%", opacity:0.75 }}/>
-              : <div style={{ width:24, height:24, borderRadius:"50%", background:C.accentDim, display:"flex", alignItems:"center", justifyContent:"center", fontSize:"0.6rem", letterSpacing:"0.1em", fontFamily:"system-ui", fontWeight:700, color:C.accent }}>{user?.name?.[0]}</div>
-            }
-            <button onClick={handleLogout}
-              style={{ fontSize:"0.7rem", fontFamily:"system-ui", background:"none", border:"none", color:"#1e1e1e", transition:"color 0.15s", cursor:"pointer", padding:0 }}
-              onMouseEnter={e => e.currentTarget.style.color="#444"}
-              onMouseLeave={e => e.currentTarget.style.color="#1e1e1e"}>
-              Sign out
-            </button>
-          </div>
+      <header
+  style={{
+    position: "sticky",
+    top: 0,
+    zIndex: 100,
+    background: "rgba(6,6,6,0.97)",
+    backdropFilter: "blur(20px)",
+    borderBottom: "1px solid #0e0e0e",
+  }}
+>
+  <div
+    style={{
+      maxWidth: 980,
+      margin: "0 auto",
+      padding: isMobile ? "0 18px" : "0 32px",
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "space-between",
+      height: 56,
+    }}
+  >
+    {/* Logo */}
+    <span
+      style={{
+        fontSize: "0.62rem",
+        letterSpacing: "0.28em",
+        textTransform: "uppercase",
+        fontFamily: "system-ui",
+        fontWeight: 700,
+        color: C.accent,
+      }}
+    >
+      nowthink
+    </span>
+
+    {/* Desktop Navigation */}
+    {!isMobile && (
+      <>
+        <nav style={{ display: "flex", flex: 1, marginLeft: 30 }}>
+          {navItems.map((item) => {
+            const active = view === item.key;
+
+            return (
+              <button
+                key={item.key}
+                onClick={() => setView(item.key)}
+                style={{
+                  background: "none",
+                  border: "none",
+                  padding: "0 13px",
+                  height: 56,
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 7,
+                  color: active ? C.text : "#2e2e2e",
+                  fontSize: "0.76rem",
+                  fontFamily: "system-ui",
+                  borderBottom: `2px solid ${
+                    active ? C.accent : "transparent"
+                  }`,
+                  cursor: "pointer",
+                }}
+              >
+                {item.label}
+
+                {item.count > 0 && (
+                  <span
+                    style={{
+                      fontSize: "0.54rem",
+                      background: active ? "#0e200e" : "#0e0e0e",
+                      color: active ? C.accent : "#2a2a2a",
+                      padding: "2px 6px",
+                      borderRadius: 3,
+                    }}
+                  >
+                    {item.count}
+                  </span>
+                )}
+              </button>
+            );
+          })}
+        </nav>
+
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: 10,
+          }}
+        >
+          {user?.picture ? (
+            <img
+              src={user.picture}
+              alt=""
+              style={{
+                width: 24,
+                height: 24,
+                borderRadius: "50%",
+              }}
+            />
+          ) : (
+            <div
+              style={{
+                width: 24,
+                height: 24,
+                borderRadius: "50%",
+                background: C.accentDim,
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                color: C.accent,
+              }}
+            >
+              {user?.name?.[0]}
+            </div>
+          )}
+
+          <button
+            onClick={handleLogout}
+            style={{
+              background: "none",
+              border: "none",
+              color: "#444",
+              cursor: "pointer",
+            }}
+          >
+            Sign out
+          </button>
         </div>
-      </header>
+      </>
+    )}
+
+    {/* Mobile Hamburger */}
+    {isMobile && (
+      <button
+        onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+        style={{
+          background: "none",
+          border: "none",
+          color: "#ddd",
+          fontSize: "1.4rem",
+          cursor: "pointer",
+        }}
+      >
+        ☰
+      </button>
+    )}
+  </div>
+</header>
+{isMobile && mobileMenuOpen && (
+  <div
+    style={{
+      position: "fixed",
+      top: 56,
+      left: 0,
+      width: "100%",
+      background: "#090909",
+      borderBottom: "1px solid #151515",
+      zIndex: 99,
+      animation: "nt-fade .2s ease",
+    }}
+  >
+    {navItems.map((item) => {
+      const active = view === item.key;
+
+      return (
+        <button
+          key={item.key}
+          onClick={() => {
+            setView(item.key);
+            setMobileMenuOpen(false);
+          }}
+          style={{
+            width: "100%",
+            background: "none",
+            border: "none",
+            color: active ? C.accent : "#ddd",
+            textAlign: "left",
+            padding: "16px 22px",
+            fontSize: "0.95rem",
+            borderBottom: "1px solid #111",
+            cursor: "pointer",
+          }}
+        >
+          {item.label}
+        </button>
+      );
+    })}
+
+    <button
+      onClick={handleLogout}
+      style={{
+        width: "100%",
+        background: "none",
+        border: "none",
+        textAlign: "left",
+        padding: "16px 22px",
+        color: "#ff6b6b",
+        fontSize: "0.95rem",
+        cursor: "pointer",
+      }}
+    >
+      Sign out
+    </button>
+  </div>
+)}
 
       {/* MAIN */}
       <main style={{ maxWidth:980, margin:"0 auto", padding:"40px 32px 80px" }}>
