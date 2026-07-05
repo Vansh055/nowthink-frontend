@@ -1,6 +1,8 @@
 import React from "react";
+import { useNavigate } from "react-router-dom";
 
 export default function Landing() {
+  const navigate = useNavigate();
   const isMobile = window.innerWidth <= 768;
 
   return (
@@ -142,19 +144,29 @@ export default function Landing() {
           </h2>
 
           <button
-            style={{
-              background: "#103010",
-              color: "#7ed987",
-              border: "1px solid #295229",
-              borderRadius: 10,
-              padding: "16px 26px",
-              cursor: "pointer",
-              fontFamily: "system-ui",
-              fontSize: ".95rem",
-            }}
-          >
-            Start Investigation →
-          </button>
+  onClick={() => navigate("/app")}
+  style={{
+    background: "#103010",
+    color: "#7ed987",
+    border: "1px solid #295229",
+    borderRadius: 10,
+    padding: "16px 26px",
+    cursor: "pointer",
+    fontFamily: "system-ui",
+    fontSize: ".95rem",
+    transition: ".25s",
+  }}
+  onMouseEnter={(e) => {
+    e.currentTarget.style.transform = "translateY(-2px)";
+    e.currentTarget.style.boxShadow = "0 10px 30px rgba(74,158,106,.25)";
+  }}
+  onMouseLeave={(e) => {
+    e.currentTarget.style.transform = "translateY(0)";
+    e.currentTarget.style.boxShadow = "none";
+  }}
+>
+  Start Investigation →
+</button>
 
           <p
             style={{
