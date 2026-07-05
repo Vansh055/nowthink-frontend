@@ -1,3 +1,4 @@
+import Landing from "./pages/Landing";
 import { useState, useEffect, useRef, useCallback } from "react";
 
 const API = process.env.REACT_APP_API_URL || "http://localhost:9090";
@@ -525,7 +526,7 @@ useEffect(() => {
       <Spinner size={22}/>
     </div>
   );
-  if (!user) return <LoginScreen/>;
+  if (!user) return <Landing />;
 
   const [greetWord, greetSub] = greet();
   const hasText = obsText.trim().length > 0;
