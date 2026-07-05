@@ -371,6 +371,8 @@ const EmptyState = ({ icon, title, sub }) => (
 const MOBILE_BREAKPOINT = 768;
 
 
+
+
 // ── MAIN APP ───────────────────────────────────────────────────────────────
 export default function App() {
   const [user,         setUser]         = useState(null);
@@ -395,6 +397,16 @@ export default function App() {
 );
 
 const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+
+const loadingMessages = [
+  "Opening investigation file...",
+  "Reviewing observation archive...",
+  "Connecting recurring patterns...",
+  "Cross-examining supporting evidence...",
+  "Preparing investigation report...",
+];
+
+const [loadingStep, setLoadingStep] = useState(0);
 
 useEffect(() => {
   const handleResize = () => {
@@ -459,18 +471,49 @@ useEffect(() => {
   };
 
   const handleGenerate = async () => {
-    if (generating) return;
-    setGenerating(true); setError(null);
-    try {
-      const res = await authFetch(`${API}/api/discoveries/generate`, { method:"POST" });
-      if (res.ok) {
-        const data = await res.json();
-        setDiscoveries(prev => [data, ...prev.filter(d => d.id !== data.id)]);
-        setSelectedCase(data);
+  if (generating) return;
+
+  setGenerating(true);
+  setError(null);
+  setLoadingStep(0);
+
+  const interval = setInterval(() => {
+    setLoadingStep((prev) => {
+      if (prev < loadingMessages.length - 1) {
+        return prev + 1;
       }
-    } catch { setError("Investigation failed."); }
+      return prev;
+    });
+  }, 800);
+
+  try {
+    const res = await authFetch(
+      `${API}/api/discoveries/generate`,
+      {
+        method: "POST",
+      }
+    );
+
+    if (!res.ok) {
+      throw new Error("Investigation failed");
+    }
+
+    const data = await res.json();
+
+    setDiscoveries((prev) => [
+      data,
+      ...prev.filter((d) => d.id !== data.id),
+    ]);
+
+    setSelectedCase(data);
+  } catch (err) {
+    console.error(err);
+    setError("Investigation failed.");
+  } finally {
+    clearInterval(interval);
     setGenerating(false);
-  };
+  }
+};
 
   const handleLogout = () => {
     clearToken();
@@ -768,27 +811,202 @@ useEffect(() => {
             </div>
 
             {/* Investigation panel */}
-            <div style={{ background:"#0a130a", border:"1px solid #111e11", borderRadius:10, padding:"20px 24px", marginBottom:24, position:"relative", overflow:"hidden" }}>
-              <div style={{ position:"absolute", top:0, right:0, width:200, height:200, background:`radial-gradient(circle at top right, ${C.accentGlow}, transparent 70%)`, pointerEvents:"none" }}/>
-              <div style={{ position:"relative" }}>
-                <p style={{ fontSize:"0.56rem", letterSpacing:"0.16em", textTransform:"uppercase", fontFamily:"system-ui", fontWeight:600, color:totalObs >= 3 ? C.accentDim : "#1e2e1e", marginBottom:8 }}>
-                  {totalObs < 3 ? `${3-totalObs} more observation${3-totalObs!==1?"s":""} needed` : "✓ ready to investigate"}
-                </p>
-                <p style={{ fontSize:"0.85rem", fontFamily:"'Georgia',serif", color:"#2e2e2e", lineHeight:1.7, marginBottom:totalObs >= 3 ? 18 : 0 }}>
-                  {totalObs < 3
-                    ? "The system requires at least 3 observations before it can open a case."
-                    : "Enough evidence has been gathered. Ask the system what it found."}
-                </p>
-                {totalObs >= 3 && (
-                  <button onClick={handleGenerate} disabled={generating}
-                    style={{ background:generating ? "transparent" : "#0f2a0f", border:`1px solid ${generating ? "#1a2a1a" : "#1e4a1e"}`, color:generating ? C.accentDim : C.accent, padding:"9px 18px", borderRadius:6, fontSize:"0.78rem", fontFamily:"system-ui", display:"inline-flex", alignItems:"center", gap:9, transition:"all 0.2s cubic-bezier(0.4,0,0.2,1)", letterSpacing:"-0.01em", cursor:generating?"default":"pointer", position:"relative" }}
-                    onMouseEnter={e => { if(!generating){ e.currentTarget.style.borderColor="#2a5c2a"; e.currentTarget.style.transform="translateY(-1px)"; e.currentTarget.style.boxShadow=`0 4px 16px rgba(74,158,106,0.15)`; } }}
-                    onMouseLeave={e => { e.currentTarget.style.borderColor=generating?"#1a2a1a":"#1e4a1e"; e.currentTarget.style.transform="none"; e.currentTarget.style.boxShadow="none"; }}>
-                    {generating ? <><Spinner size={13}/>Investigating patterns...</> : "→ Open investigation"}
-                  </button>
-                )}
-              </div>
-            </div>
+<div
+  style={{
+    background: "#0a130a",
+    border: "1px solid #111e11",
+    borderRadius: 12,
+    padding: isMobile ? "20px" : "20px 24px",
+    marginBottom: 24,
+    position: "relative",
+    overflow: "hidden",
+    minHeight: generating ? 190 : "auto",
+    transition: "all .35s ease",
+  }}
+>
+  <div
+    style={{
+      position: "absolute",
+      top: 0,
+      right: 0,
+      width: 220,
+      height: 220,
+      background: `radial-gradient(circle at top right, ${C.accentGlow}, transparent 70%)`,
+      pointerEvents: "none",
+    }}
+  />
+
+  <div style={{ position: "relative" }}>
+    {!generating ? (
+      <>
+        <p
+          style={{
+            fontSize: "0.56rem",
+            letterSpacing: "0.16em",
+            textTransform: "uppercase",
+            fontFamily: "system-ui",
+            fontWeight: 600,
+            color: totalObs >= 3 ? C.accentDim : "#1e2e1e",
+            marginBottom: 8,
+          }}
+        >
+          {totalObs < 3
+            ? `${3 - totalObs} more observation${3 - totalObs !== 1 ? "s" : ""} needed`
+            : "✓ Ready to investigate"}
+        </p>
+
+        <p
+          style={{
+            fontSize: "0.85rem",
+            fontFamily: "'Georgia', serif",
+            color: "#2e2e2e",
+            lineHeight: 1.7,
+            marginBottom: totalObs >= 3 ? 18 : 0,
+          }}
+        >
+          {totalObs < 3
+            ? "The system requires at least 3 observations before it can open a case."
+            : "Enough evidence has been gathered. Ask the system what it found."}
+        </p>
+
+        {totalObs >= 3 && (
+          <button
+            onClick={handleGenerate}
+            style={{
+              background: "#0f2a0f",
+              border: "1px solid #1e4a1e",
+              color: C.accent,
+              padding: isMobile ? "14px 18px" : "9px 18px",
+              width: isMobile ? "100%" : "auto",
+              borderRadius: 8,
+              fontSize: "0.82rem",
+              fontFamily: "system-ui",
+              cursor: "pointer",
+              transition: ".2s",
+            }}
+          >
+            → Open Investigation
+          </button>
+        )}
+      </>
+    ) : (
+  <div
+    style={{
+      animation: "nt-fade .35s ease",
+      minHeight: 240,
+      display: "flex",
+      flexDirection: "column",
+      justifyContent: "center",
+    }}
+  >
+    <p
+      style={{
+        fontSize: "0.56rem",
+        letterSpacing: ".22em",
+        textTransform: "uppercase",
+        fontFamily: "system-ui",
+        fontWeight: 700,
+        color: C.accent,
+        marginBottom: 26,
+      }}
+    >
+      OPENING CASE FILE
+    </p>
+
+    {loadingMessages.map((step, i) => {
+      const completed = i < loadingStep;
+      const active = i === loadingStep;
+
+      return (
+        <div
+          key={step}
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: 14,
+            marginBottom: 16,
+            transition: "all .3s ease",
+          }}
+        >
+          <div
+            style={{
+              width: 22,
+              display: "flex",
+              justifyContent: "center",
+            }}
+          >
+            {completed ? (
+              <span
+                style={{
+                  color: C.accent,
+                  fontSize: "1rem",
+                }}
+              >
+                ✓
+              </span>
+            ) : active ? (
+              <Spinner size={14} />
+            ) : (
+              <span
+                style={{
+                  color: "#333",
+                }}
+              >
+                ○
+              </span>
+            )}
+          </div>
+
+          <span
+            style={{
+              fontFamily: "'Georgia', serif",
+              fontSize: active ? "1rem" : ".94rem",
+              color: completed
+                ? C.accent
+                : active
+                ? C.text
+                : "#444",
+              transition: ".25s",
+            }}
+          >
+            {step}
+          </span>
+        </div>
+      );
+    })}
+
+    <div
+      style={{
+        marginTop: 22,
+        paddingTop: 18,
+        borderTop: "1px solid #141414",
+      }}
+    >
+      <p
+        style={{
+          fontSize: ".68rem",
+          color: "#555",
+          fontFamily: "system-ui",
+          marginBottom: 6,
+        }}
+      >
+        Evidence Under Review
+      </p>
+
+      <p
+        style={{
+          fontSize: ".95rem",
+          color: C.text,
+          fontFamily: "'Georgia', serif",
+        }}
+      >
+        {totalObs} observations available
+      </p>
+    </div>
+  </div>
+)}
+  </div>
+</div>
 
             {loading && !discoveries.length
               ? <>{[0,1,2].map(i => <SkeletonCard key={i}/>)}</>
