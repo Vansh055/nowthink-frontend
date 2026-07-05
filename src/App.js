@@ -91,7 +91,7 @@ const ConfBar = ({ score, height=4, showLabel=false }) => (
 );
 
 // ── LOGIN ──────────────────────────────────────────────────────────────────
-function LoginScreen() {
+/*function LoginScreen() {
   return (
     <div style={{ minHeight:"100vh", background:C.bg, display:"flex", alignItems:"center", justifyContent:"center", padding:"40px 24px" }}>
       <div style={{ maxWidth:"360px", width:"100%" }}>
@@ -118,7 +118,7 @@ function LoginScreen() {
       </div>
     </div>
   );
-}
+}*/
 
 // ── CASE CARD ──────────────────────────────────────────────────────────────
 function CaseCard({ d, onClick, index=0 , isMobile }) {
