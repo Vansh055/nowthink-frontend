@@ -162,6 +162,7 @@ function CaseCard({ d, onClick, index=0 }) {
 
 // ── CASE MODAL ─────────────────────────────────────────────────────────────
 function CaseModal({ d, onClose }) {
+  const isMobile = window.innerWidth <= 768;
   const [tab, setTab] = useState("report");
 
   useEffect(() => {
@@ -182,10 +183,20 @@ function CaseModal({ d, onClose }) {
     <div onClick={onClose}
       style={{ position:"fixed", inset:0, background:"rgba(0,0,0,0.95)", display:"flex", alignItems:"center", justifyContent:"center", zIndex:300, padding:"24px", backdropFilter:"blur(16px)", animation:"nt-fade 0.2s ease" }}>
       <div onClick={e => e.stopPropagation()}
-        style={{ background:"#0a0a0a", border:"1px solid #1e1e1e", borderRadius:12, maxWidth:620, width:"100%", maxHeight:"90vh", overflowY:"auto", animation:"nt-modal 0.25s cubic-bezier(0.34,1.56,0.64,1)", boxShadow:"0 40px 80px rgba(0,0,0,0.8), inset 0 1px 0 rgba(255,255,255,0.04)" }}>
+        style={{
+  background:"#0a0a0a",
+  border:"1px solid #1e1e1e",
+  borderRadius:isMobile ? 18 : 12,
+  width:isMobile ? "100%" : "100%",
+  maxWidth:isMobile ? "95vw" : 620,
+  maxHeight:isMobile ? "92vh" : "90vh",
+  overflowY:"auto",
+  animation:"nt-modal 0.25s cubic-bezier(0.34,1.56,0.64,1)",
+  boxShadow:"0 40px 80px rgba(0,0,0,0.8), inset 0 1px 0 rgba(255,255,255,0.04)"
+}}>
 
         {/* File header */}
-        <div style={{ padding:"20px 28px 0", borderBottom:"1px solid #0f0f0f" }}>
+        <div style={{ padding:isMobile ? "18px" : "20px 28px 0", borderBottom:"1px solid #0f0f0f" }}>
           <div style={{ display:"flex", justifyContent:"space-between", alignItems:"flex-start", marginBottom:16 }}>
             <div>
               <p style={{ fontSize:"0.56rem", letterSpacing:"0.2em", textTransform:"uppercase", fontFamily:"system-ui", fontWeight:600, color:"#1e2e1e", marginBottom:8 }}>
@@ -194,10 +205,10 @@ function CaseModal({ d, onClose }) {
               <Badge status={d.status}/>
             </div>
             <button onClick={onClose}
-              style={{ fontSize:"0.56rem", letterSpacing:"0.1em", textTransform:"uppercase", fontFamily:"system-ui", fontWeight:600, background:"#111", border:"1px solid #1a1a1a", color:"#2e2e2e", padding:"5px 10px", borderRadius:4, cursor:"pointer", transition:"color 0.15s" }}
+              style={{ fontSize:"0.56rem", letterSpacing:"0.1em", textTransform:"uppercase", fontFamily:"system-ui", fontWeight:600, background:"#111", border:"1px solid #1a1a1a", color:"#2e2e2e", padding:isMobile ? "10px 14px" : "5px 10px", borderRadius:4, cursor:"pointer", transition:"color 0.15s" }}
               onMouseEnter={e => e.currentTarget.style.color="#666"}
               onMouseLeave={e => e.currentTarget.style.color="#2e2e2e"}>
-              Close
+              {isMobile ? "✕" : "Close"}
             </button>
           </div>
 
@@ -205,7 +216,7 @@ function CaseModal({ d, onClose }) {
           <div style={{ display:"flex", gap:0 }}>
             {tabs.map(t => (
               <button key={t.key} onClick={() => setTab(t.key)}
-                style={{ background:"none", border:"none", padding:"10px 16px", fontSize:"0.78rem", fontFamily:"system-ui", color: tab===t.key ? C.text : "#333", borderBottom:`2px solid ${tab===t.key ? C.accent : "transparent"}`, cursor:"pointer", transition:"all 0.15s", letterSpacing:"-0.01em", position:"relative", top:1 }}>
+                style={{ background:"none", border:"none", padding:isMobile ? "14px 18px" : "10px 16px", fontSize:isMobile ? "0.95rem" : "0.78rem", fontFamily:"system-ui", color: tab===t.key ? C.text : "#333", borderBottom:`2px solid ${tab===t.key ? C.accent : "transparent"}`, cursor:"pointer", transition:"all 0.15s", letterSpacing:"-0.01em", position:"relative", top:1 }}>
                 {t.label}
               </button>
             ))}
@@ -214,11 +225,11 @@ function CaseModal({ d, onClose }) {
 
         {/* Report tab */}
         {tab === "report" && (
-          <div style={{ padding:"28px 28px 24px", animation:"nt-up 0.2s ease" }}>
+          <div style={{ padding:isMobile ? "20px" : "28px 28px 24px", animation:"nt-up 0.2s ease" }}>
             {/* Hypothesis */}
             <div style={{ marginBottom:28 }}>
               <p style={{ fontSize:"0.56rem", letterSpacing:"0.16em", textTransform:"uppercase", fontFamily:"system-ui", fontWeight:600, color:"#252525", marginBottom:12 }}>Hypothesis</p>
-              <p style={{ fontSize:"1.05rem", fontFamily:"'Georgia',serif", lineHeight:1.8, color:"#e0e0e0", fontStyle:"italic" }}>{d.claim}</p>
+              <p style={{ fontSize:isMobile ? "1.55rem" : "1.05rem", fontFamily:"'Georgia',serif", lineHeight:1.8, color:"#e0e0e0", fontStyle:"italic" }}>{d.claim}</p>
             </div>
 
             <div style={{ height:1, background:"#0f0f0f", margin:"0 0 28px" }}/>
@@ -234,7 +245,7 @@ function CaseModal({ d, onClose }) {
             <div style={{ height:1, background:"#0f0f0f", margin:"0 0 28px" }}/>
 
             {/* Meta */}
-            <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:16 }}>
+            <div style={{ display:"grid", gridTemplateColumns:isMobile ? "1fr" : "1fr 1fr", gap:16 }}>
               <div style={{ background:"#080808", border:"1px solid #111", borderRadius:6, padding:"14px 16px" }}>
                 <p style={{ fontSize:"0.56rem", letterSpacing:"0.14em", textTransform:"uppercase", fontFamily:"system-ui", fontWeight:600, color:"#222", marginBottom:6 }}>Discovery type</p>
                 <p style={{ fontSize:"0.82rem", fontFamily:"system-ui", color:"#444" }}>{d.discoveryType || "Pattern"}</p>
