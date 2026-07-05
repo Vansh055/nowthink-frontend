@@ -120,12 +120,29 @@ function LoginScreen() {
 }
 
 // ── CASE CARD ──────────────────────────────────────────────────────────────
-function CaseCard({ d, onClick, index=0 }) {
+function CaseCard({ d, onClick, index=0 , isMobile }) {
   const [hov, setHov] = useState(false);
   return (
     <article onClick={() => onClick(d)}
-      onMouseEnter={() => setHov(true)}
-      onMouseLeave={() => setHov(false)}
+      onMouseEnter={() => {
+  if (!isMobile) setHov(true);
+}}
+
+onMouseLeave={() => {
+  if (!isMobile) setHov(false);
+}}
+
+onMouseDown={(e) => {
+  e.currentTarget.style.transform = "scale(.985)";
+}}
+
+onMouseUp={(e) => {
+  if (!isMobile && hov) {
+    e.currentTarget.style.transform = "translateY(-2px)";
+  } else {
+    e.currentTarget.style.transform = "translateY(0)";
+  }
+}}
       style={{
         background: hov ? C.surfaceHov : C.surface,
         border: `1px solid ${hov ? C.borderHov : C.border}`,
@@ -134,7 +151,9 @@ function CaseCard({ d, onClick, index=0 }) {
         marginBottom:8,
         cursor:"pointer",
         transition:"all 0.2s cubic-bezier(0.4,0,0.2,1)",
-        transform: hov ? "translateY(-2px)" : "translateY(0)",
+        transform: hov && !isMobile
+  ? "translateY(-2px)"
+  : "translateY(0)",
         boxShadow: hov ? `0 8px 32px rgba(0,0,0,0.4), 0 0 0 1px ${C.borderHov}, inset 0 1px 0 rgba(255,255,255,0.03)` : "none",
         animation:`nt-up 0.3s ease ${index*0.05}s both`,
         position:"relative",
