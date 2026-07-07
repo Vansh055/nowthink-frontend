@@ -144,7 +144,10 @@ export default function Landing() {
           </h2>
 
           <button
-  onClick={() => navigate("/app")}
+  onClick={() => {
+  window.location.href =
+    "http://localhost:9090/oauth2/authorization/google";
+}}
   style={{
     background: "#103010",
     color: "#7ed987",
