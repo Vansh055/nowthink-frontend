@@ -3,21 +3,16 @@ import { useEffect } from "react";
 export default function App() {
 
   useEffect(() => {
-
-    alert("USE EFFECT");
+    alert("SEARCH = " + window.location.search);
 
     const params = new URLSearchParams(window.location.search);
 
-    const token = params.get("token");
+    alert("TOKEN = " + params.get("token"));
 
-    alert(token);
+    localStorage.setItem("test", params.get("token"));
 
-    if(token){
-      localStorage.setItem("nowthink_token", token);
-      alert("saved");
-    }
-
-  }, []);
+    alert("LOCAL = " + localStorage.getItem("test"));
+}, []);
 
   return <h1>Hello App</h1>;
 }
