@@ -81,7 +81,7 @@ const ConfBar = ({ score, height=4, showLabel=false }) => (
       </div>
     )}
     <div style={{ display:"flex", alignItems:"center", gap:12 }}>
-      <div style={{ flex:1, height, background:"#0f0f0f", borderRadius:height, overflow:"hidden", position:"relative" }}>
+      <div style={{ flex:1, height, background:"#0f0f0f", borderRadius:height, overflow:"hidden" }}>
         <div style={{ width:`${score}%`, height:"100%", background:`linear-gradient(90deg, ${confColor(score)}aa, ${confColor(score)})`, borderRadius:height, transition:"width 1.2s cubic-bezier(0.4,0,0.2,1)", boxShadow:`0 0 8px ${confColor(score)}44` }}/>
       </div>
       {!showLabel && <span style={{ fontSize:"0.72rem", fontFamily:"system-ui", color:confColor(score), minWidth:32, textAlign:"right", fontWeight:600 }}>{score}%</span>}
@@ -89,7 +89,6 @@ const ConfBar = ({ score, height=4, showLabel=false }) => (
   </div>
 );
 
-// ── LOGIN ──────────────────────────────────────────────────────────────────
 function LoginScreen() {
   return (
     <div style={{ minHeight:"100vh", background:C.bg, display:"flex", alignItems:"center", justifyContent:"center", padding:"40px 24px" }}>
@@ -119,7 +118,6 @@ function LoginScreen() {
   );
 }
 
-// ── CASE CARD ──────────────────────────────────────────────────────────────
 function CaseCard({ d, onClick, index=0 }) {
   const [hov, setHov] = useState(false);
   return (
@@ -129,16 +127,12 @@ function CaseCard({ d, onClick, index=0 }) {
       style={{
         background: hov ? C.surfaceHov : C.surface,
         border: `1px solid ${hov ? C.borderHov : C.border}`,
-        borderRadius:10,
-        padding:"20px 24px",
-        marginBottom:8,
-        cursor:"pointer",
+        borderRadius:10, padding:"20px 24px", marginBottom:8, cursor:"pointer",
         transition:"all 0.2s cubic-bezier(0.4,0,0.2,1)",
         transform: hov ? "translateY(-2px)" : "translateY(0)",
         boxShadow: hov ? `0 8px 32px rgba(0,0,0,0.4), 0 0 0 1px ${C.borderHov}, inset 0 1px 0 rgba(255,255,255,0.03)` : "none",
         animation:`nt-up 0.3s ease ${index*0.05}s both`,
-        position:"relative",
-        overflow:"hidden",
+        position:"relative", overflow:"hidden",
       }}>
       {hov && <div style={{ position:"absolute", inset:0, background:`radial-gradient(ellipse at top left, ${C.accentGlow}, transparent 70%)`, pointerEvents:"none" }}/>}
       <div style={{ display:"flex", justifyContent:"space-between", alignItems:"flex-start", marginBottom:12, gap:16, position:"relative" }}>
@@ -160,7 +154,6 @@ function CaseCard({ d, onClick, index=0 }) {
   );
 }
 
-// ── CASE MODAL ─────────────────────────────────────────────────────────────
 function CaseModal({ d, onClose }) {
   const [tab, setTab] = useState("report");
 
@@ -173,18 +166,13 @@ function CaseModal({ d, onClose }) {
 
   if (!d) return null;
 
-  const tabs = [
-    { key:"report",   label:"Report" },
-    { key:"evidence", label:"Evidence" },
-  ];
+  const tabs = [{ key:"report", label:"Report" }, { key:"evidence", label:"Evidence" }];
 
   return (
     <div onClick={onClose}
       style={{ position:"fixed", inset:0, background:"rgba(0,0,0,0.95)", display:"flex", alignItems:"center", justifyContent:"center", zIndex:300, padding:"24px", backdropFilter:"blur(16px)", animation:"nt-fade 0.2s ease" }}>
       <div onClick={e => e.stopPropagation()}
         style={{ background:"#0a0a0a", border:"1px solid #1e1e1e", borderRadius:12, maxWidth:620, width:"100%", maxHeight:"90vh", overflowY:"auto", animation:"nt-modal 0.25s cubic-bezier(0.34,1.56,0.64,1)", boxShadow:"0 40px 80px rgba(0,0,0,0.8), inset 0 1px 0 rgba(255,255,255,0.04)" }}>
-
-        {/* File header */}
         <div style={{ padding:"20px 28px 0", borderBottom:"1px solid #0f0f0f" }}>
           <div style={{ display:"flex", justifyContent:"space-between", alignItems:"flex-start", marginBottom:16 }}>
             <div>
@@ -200,40 +188,30 @@ function CaseModal({ d, onClose }) {
               Close
             </button>
           </div>
-
-          {/* Tabs */}
           <div style={{ display:"flex", gap:0 }}>
             {tabs.map(t => (
               <button key={t.key} onClick={() => setTab(t.key)}
-                style={{ background:"none", border:"none", padding:"10px 16px", fontSize:"0.78rem", fontFamily:"system-ui", color: tab===t.key ? C.text : "#333", borderBottom:`2px solid ${tab===t.key ? C.accent : "transparent"}`, cursor:"pointer", transition:"all 0.15s", letterSpacing:"-0.01em", position:"relative", top:1 }}>
+                style={{ background:"none", border:"none", padding:"10px 16px", fontSize:"0.78rem", fontFamily:"system-ui", color:tab===t.key ? C.text : "#333", borderBottom:`2px solid ${tab===t.key ? C.accent : "transparent"}`, cursor:"pointer", transition:"all 0.15s", letterSpacing:"-0.01em", position:"relative", top:1 }}>
                 {t.label}
               </button>
             ))}
           </div>
         </div>
 
-        {/* Report tab */}
         {tab === "report" && (
           <div style={{ padding:"28px 28px 24px", animation:"nt-up 0.2s ease" }}>
-            {/* Hypothesis */}
             <div style={{ marginBottom:28 }}>
               <p style={{ fontSize:"0.56rem", letterSpacing:"0.16em", textTransform:"uppercase", fontFamily:"system-ui", fontWeight:600, color:"#252525", marginBottom:12 }}>Hypothesis</p>
               <p style={{ fontSize:"1.05rem", fontFamily:"'Georgia',serif", lineHeight:1.8, color:"#e0e0e0", fontStyle:"italic" }}>{d.claim}</p>
             </div>
-
             <div style={{ height:1, background:"#0f0f0f", margin:"0 0 28px" }}/>
-
-            {/* Confidence */}
             <div style={{ marginBottom:28 }}>
               <ConfBar score={d.confidenceScore} height={6} showLabel/>
               <p style={{ fontSize:"0.72rem", fontFamily:"system-ui", color:"#222", marginTop:10, lineHeight:1.7 }}>
                 Based on the volume and consistency of supporting observations versus contradicting ones.
               </p>
             </div>
-
             <div style={{ height:1, background:"#0f0f0f", margin:"0 0 28px" }}/>
-
-            {/* Meta */}
             <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:16 }}>
               <div style={{ background:"#080808", border:"1px solid #111", borderRadius:6, padding:"14px 16px" }}>
                 <p style={{ fontSize:"0.56rem", letterSpacing:"0.14em", textTransform:"uppercase", fontFamily:"system-ui", fontWeight:600, color:"#222", marginBottom:6 }}>Discovery type</p>
@@ -241,13 +219,12 @@ function CaseModal({ d, onClose }) {
               </div>
               <div style={{ background:"#080808", border:"1px solid #111", borderRadius:6, padding:"14px 16px" }}>
                 <p style={{ fontSize:"0.56rem", letterSpacing:"0.14em", textTransform:"uppercase", fontFamily:"system-ui", fontWeight:600, color:"#222", marginBottom:6 }}>Status</p>
-                <p style={{ fontSize:"0.82rem", fontFamily:"system-ui", color: d.status==="Supported" ? C.accent : d.status==="Investigating" ? "#9e9e4a" : "#9e4a4a" }}>{d.status}</p>
+                <p style={{ fontSize:"0.82rem", fontFamily:"system-ui", color:d.status==="Supported"?C.accent:d.status==="Investigating"?"#9e9e4a":"#9e4a4a" }}>{d.status}</p>
               </div>
             </div>
           </div>
         )}
 
-        {/* Evidence tab */}
         {tab === "evidence" && (
           <div style={{ padding:"28px 28px 24px", animation:"nt-up 0.2s ease" }}>
             {d.evidenceFor && (
@@ -278,7 +255,6 @@ function CaseModal({ d, onClose }) {
   );
 }
 
-// ── EVOLUTION VIEW ─────────────────────────────────────────────────────────
 function EvolutionView({ evolutions }) {
   const themes = [...new Set(evolutions.map(e => e.theme))];
   if (!evolutions.length) return (
@@ -303,14 +279,14 @@ function EvolutionView({ evolutions }) {
             </div>
             <div style={{ paddingLeft:4 }}>
               {entries.map((entry, i) => (
-                <div key={entry.id} style={{ display:"flex", gap:20, marginBottom:i < entries.length-1 ? 0 : 0 }}>
+                <div key={entry.id} style={{ display:"flex", gap:20, marginBottom:0 }}>
                   <div style={{ display:"flex", flexDirection:"column", alignItems:"center", width:12, flexShrink:0, paddingTop:4 }}>
                     <div style={{ width:10, height:10, borderRadius:"50%", background:color, flexShrink:0, boxShadow:`0 0 8px ${color}66` }}/>
                     {i < entries.length-1 && (
                       <div style={{ width:1, flexGrow:1, background:`linear-gradient(${color}40, ${color}10)`, minHeight:32, marginTop:4 }}/>
                     )}
                   </div>
-                  <div style={{ flex:1, paddingBottom: i < entries.length-1 ? 28 : 0 }}>
+                  <div style={{ flex:1, paddingBottom:i < entries.length-1 ? 28 : 0 }}>
                     <p style={{ fontSize:"0.9rem", fontFamily:"'Georgia',serif", lineHeight:1.65, color:"#b0b0b0", fontStyle:"italic", margin:"0 0 5px" }}>{entry.belief}</p>
                     <p style={{ fontSize:"0.7rem", fontFamily:"system-ui", color:"#282828", margin:"0 0 7px" }}>
                       {new Date(entry.recordedAt).toLocaleDateString("en-IN", { day:"numeric", month:"short" })}
@@ -329,7 +305,6 @@ function EvolutionView({ evolutions }) {
   );
 }
 
-// ── EMPTY STATE ────────────────────────────────────────────────────────────
 const EmptyState = ({ icon, title, sub }) => (
   <div style={{ padding:"60px 0", textAlign:"center", animation:"nt-up 0.4s ease" }}>
     <div style={{ width:52, height:52, borderRadius:"50%", border:"1px solid #161616", background:"#0a0a0a", margin:"0 auto 20px", display:"flex", alignItems:"center", justifyContent:"center", fontSize:"1.4rem" }}>{icon}</div>
@@ -338,7 +313,6 @@ const EmptyState = ({ icon, title, sub }) => (
   </div>
 );
 
-// ── MAIN APP ───────────────────────────────────────────────────────────────
 export default function App() {
   const [user,         setUser]         = useState(null);
   const [authChecked,  setAuthChecked]  = useState(false);
@@ -451,11 +425,10 @@ export default function App() {
         ::-webkit-scrollbar-track { background:${C.bg}; }
         ::-webkit-scrollbar-thumb { background:#1a1a1a; border-radius:2px; }
         textarea         { caret-color:${C.accent}; }
-        textarea:focus   { outline:none !important; border-color:#1e3e1e !important; box-shadow: 0 0 0 3px rgba(74,158,106,0.06) !important; }
+        textarea:focus   { outline:none !important; border-color:#1e3e1e !important; box-shadow:0 0 0 3px rgba(74,158,106,0.06) !important; }
         button:focus     { outline:none; }
       `}</style>
 
-      {/* NAV */}
       <header style={{ position:"sticky", top:0, zIndex:100, background:"rgba(6,6,6,0.97)", backdropFilter:"blur(20px)", borderBottom:"1px solid #0e0e0e" }}>
         <div style={{ maxWidth:980, margin:"0 auto", padding:"0 32px", display:"flex", alignItems:"center", height:48, gap:28 }}>
           <span style={{ fontSize:"0.62rem", letterSpacing:"0.28em", textTransform:"uppercase", fontFamily:"system-ui", fontWeight:700, color:C.accent, flexShrink:0 }}>nowthink</span>
@@ -492,7 +465,6 @@ export default function App() {
         </div>
       </header>
 
-      {/* MAIN */}
       <main style={{ maxWidth:980, margin:"0 auto", padding:"40px 32px 80px" }}>
 
         {error && (
@@ -502,7 +474,6 @@ export default function App() {
           </div>
         )}
 
-        {/* ── DISCOVERIES ── */}
         {view === "discovery" && (
           <div style={{ animation:"nt-up 0.3s ease" }}>
             <div style={{ display:"flex", justifyContent:"space-between", alignItems:"flex-end", marginBottom:28 }}>
@@ -515,7 +486,6 @@ export default function App() {
               )}
             </div>
 
-            {/* Investigation panel */}
             <div style={{ background:"#0a130a", border:"1px solid #111e11", borderRadius:10, padding:"20px 24px", marginBottom:24, position:"relative", overflow:"hidden" }}>
               <div style={{ position:"absolute", top:0, right:0, width:200, height:200, background:`radial-gradient(circle at top right, ${C.accentGlow}, transparent 70%)`, pointerEvents:"none" }}/>
               <div style={{ position:"relative" }}>
@@ -529,7 +499,7 @@ export default function App() {
                 </p>
                 {totalObs >= 3 && (
                   <button onClick={handleGenerate} disabled={generating}
-                    style={{ background:generating ? "transparent" : "#0f2a0f", border:`1px solid ${generating ? "#1a2a1a" : "#1e4a1e"}`, color:generating ? C.accentDim : C.accent, padding:"9px 18px", borderRadius:6, fontSize:"0.78rem", fontFamily:"system-ui", display:"inline-flex", alignItems:"center", gap:9, transition:"all 0.2s cubic-bezier(0.4,0,0.2,1)", letterSpacing:"-0.01em", cursor:generating?"default":"pointer", position:"relative" }}
+                    style={{ background:generating ? "transparent" : "#0f2a0f", border:`1px solid ${generating ? "#1a2a1a" : "#1e4a1e"}`, color:generating ? C.accentDim : C.accent, padding:"9px 18px", borderRadius:6, fontSize:"0.78rem", fontFamily:"system-ui", display:"inline-flex", alignItems:"center", gap:9, transition:"all 0.2s cubic-bezier(0.4,0,0.2,1)", letterSpacing:"-0.01em", cursor:generating?"default":"pointer" }}
                     onMouseEnter={e => { if(!generating){ e.currentTarget.style.borderColor="#2a5c2a"; e.currentTarget.style.transform="translateY(-1px)"; e.currentTarget.style.boxShadow=`0 4px 16px rgba(74,158,106,0.15)`; } }}
                     onMouseLeave={e => { e.currentTarget.style.borderColor=generating?"#1a2a1a":"#1e4a1e"; e.currentTarget.style.transform="none"; e.currentTarget.style.boxShadow="none"; }}>
                     {generating ? <><Spinner size={13}/>Investigating patterns...</> : "→ Open investigation"}
@@ -547,7 +517,6 @@ export default function App() {
           </div>
         )}
 
-        {/* ── OBSERVE ── */}
         {view === "observe" && (
           <div style={{ animation:"nt-up 0.3s ease", maxWidth:620 }}>
             <div style={{ marginBottom:32 }}>
@@ -565,7 +534,6 @@ export default function App() {
               placeholder="Write freely. The system will extract what matters."
               style={{ width:"100%", minHeight:150, background:C.surface, border:`1px solid ${C.border}`, borderRadius:8, color:C.text, padding:"16px 18px", fontSize:"0.9rem", resize:"vertical", fontFamily:"'Georgia',serif", lineHeight:1.75, transition:"border-color 0.2s, box-shadow 0.2s", display:"block" }}/>
 
-            {/* Live character hint */}
             <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", marginTop:10, flexWrap:"wrap", gap:10 }}>
               <span style={{ fontSize:"0.67rem", fontFamily:"system-ui", color:"#1c1c1c" }}>Enter to file · Shift+Enter for new line</span>
               <div style={{ display:"flex", alignItems:"center", gap:10 }}>
@@ -576,8 +544,8 @@ export default function App() {
                     border:`1px solid ${!hasText ? "#0e0e0e" : submitting ? "#1a2a1a" : "#1e4a1e"}`,
                     color: !hasText ? "#1a1a1a" : submitting ? C.accentDim : C.accent,
                     padding:"9px 16px", borderRadius:6, fontSize:"0.76rem", fontFamily:"system-ui",
-                    display:"inline-flex", alignItems:"center", gap:8, transition:"all 0.2s", letterSpacing:"-0.01em",
-                    whiteSpace:"nowrap", cursor:submitting||!hasText?"default":"pointer",
+                    display:"inline-flex", alignItems:"center", gap:8, transition:"all 0.2s",
+                    letterSpacing:"-0.01em", whiteSpace:"nowrap", cursor:submitting||!hasText?"default":"pointer",
                   }}
                   onMouseEnter={e => { if(hasText && !submitting){ e.currentTarget.style.transform="translateY(-1px)"; e.currentTarget.style.boxShadow=`0 4px 16px rgba(74,158,106,0.12)`; e.currentTarget.style.borderColor="#2a5c2a"; } }}
                   onMouseLeave={e => { e.currentTarget.style.transform="none"; e.currentTarget.style.boxShadow="none"; e.currentTarget.style.borderColor=!hasText?"#0e0e0e":submitting?"#1a2a1a":"#1e4a1e"; }}>
@@ -605,7 +573,6 @@ export default function App() {
           </div>
         )}
 
-        {/* ── EVIDENCE ── */}
         {view === "evidence" && (
           <div style={{ animation:"nt-up 0.3s ease" }}>
             <div style={{ display:"flex", justifyContent:"space-between", alignItems:"flex-end", marginBottom:28 }}>
@@ -655,7 +622,6 @@ export default function App() {
           </div>
         )}
 
-        {/* ── EVOLUTION ── */}
         {view === "evolution" && (
           <div style={{ animation:"nt-up 0.3s ease" }}>
             <div style={{ marginBottom:28 }}>
